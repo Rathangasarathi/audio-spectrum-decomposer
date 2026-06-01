@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import Spectrogram from "./components/Spectrogram";
 
 function App() {
   const waveformCanvasRef =
@@ -7,7 +8,11 @@ function App() {
   const fftCanvasRef =
     useRef<HTMLCanvasElement>(null);
 
-  const [fftPeak, setFftPeak] = useState(0);
+  const [fftPeak, setFftPeak] =
+    useState(0);
+
+  const [analyser, setAnalyser] =
+    useState<AnalyserNode | null>(null);
 
   useEffect(() => {
     let animationId: number;
@@ -26,21 +31,33 @@ function App() {
           stream
         );
 
-      const analyser =
+      const analyserNode =
         audioContext.createAnalyser();
 
-      analyser.fftSize = 2048;
+      analyserNode.fftSize = 2048;
+      analyserNode.minDecibels =
+        -100;
+      analyserNode.maxDecibels =
+        -20;
+      analyserNode.smoothingTimeConstant =
+        0.8;
 
-      source.connect(analyser);
+      source.connect(
+        analyserNode
+      );
+
+      setAnalyser(
+        analyserNode
+      );
 
       const waveformBuffer =
         new Uint8Array(
-          analyser.frequencyBinCount
+          analyserNode.frequencyBinCount
         );
 
       const fftBuffer =
         new Uint8Array(
-          analyser.frequencyBinCount
+          analyserNode.frequencyBinCount
         );
 
       const waveformCanvas =
@@ -49,30 +66,40 @@ function App() {
       const fftCanvas =
         fftCanvasRef.current;
 
-      if (!waveformCanvas || !fftCanvas)
+      if (
+        !waveformCanvas ||
+        !fftCanvas
+      )
         return;
 
       const waveCtx =
-        waveformCanvas.getContext("2d");
+        waveformCanvas.getContext(
+          "2d"
+        );
 
       const fftCtx =
-        fftCanvas.getContext("2d");
+        fftCanvas.getContext(
+          "2d"
+        );
 
-      if (!waveCtx || !fftCtx)
+      if (
+        !waveCtx ||
+        !fftCtx
+      )
         return;
 
       const draw = () => {
-        analyser.getByteTimeDomainData(
+        analyserNode.getByteTimeDomainData(
           waveformBuffer
         );
 
-        analyser.getByteFrequencyData(
+        analyserNode.getByteFrequencyData(
           fftBuffer
         );
 
-        //------------------
+        //--------------------------------
         // WAVEFORM
-        //------------------
+        //--------------------------------
 
         waveCtx.clearRect(
           0,
@@ -95,7 +122,8 @@ function App() {
           i++
         ) {
           const v =
-            waveformBuffer[i] / 128.0;
+            waveformBuffer[i] /
+            128.0;
 
           const y =
             (v *
@@ -103,8 +131,15 @@ function App() {
             2;
 
           if (i === 0)
-            waveCtx.moveTo(x, y);
-          else waveCtx.lineTo(x, y);
+            waveCtx.moveTo(
+              x,
+              y
+            );
+          else
+            waveCtx.lineTo(
+              x,
+              y
+            );
 
           x += sliceWidth;
         }
@@ -116,9 +151,9 @@ function App() {
 
         waveCtx.stroke();
 
-        //------------------
+        //--------------------------------
         // FFT
-        //------------------
+        //--------------------------------
 
         fftCtx.clearRect(
           0,
@@ -141,7 +176,9 @@ function App() {
           const value =
             fftBuffer[i];
 
-          if (value > peak)
+          if (
+            value > peak
+          )
             peak = value;
 
           const barHeight =
@@ -152,7 +189,8 @@ function App() {
             "#00aaff";
 
           fftCtx.fillRect(
-            i * barWidth,
+            i *
+              barWidth,
             fftCanvas.height -
               barHeight,
             barWidth,
@@ -163,7 +201,9 @@ function App() {
         setFftPeak(peak);
 
         animationId =
-          requestAnimationFrame(draw);
+          requestAnimationFrame(
+            draw
+          );
       };
 
       draw();
@@ -180,31 +220,40 @@ function App() {
   return (
     <div
       style={{
-        background: "#0f172a",
-        minHeight: "100vh",
+        background:
+          "#0f172a",
+        minHeight:
+          "100vh",
         color: "white",
-        padding: "20px",
+        padding:
+          "20px",
       }}
     >
       <h1>
-        Audio Spectrum Decomposer
+        Audio Spectrum
+        Decomposer
       </h1>
 
       <h2>Waveform</h2>
 
       <canvas
-        ref={waveformCanvasRef}
+        ref={
+          waveformCanvasRef
+        }
         width={1200}
         height={250}
         style={{
-          border: "1px solid #333",
-          background: "#111827",
+          border:
+            "1px solid #333",
+          background:
+            "#111827",
         }}
       />
 
       <h2
         style={{
-          marginTop: "30px",
+          marginTop:
+            "30px",
         }}
       >
         FFT Spectrum
@@ -215,8 +264,10 @@ function App() {
         width={1200}
         height={300}
         style={{
-          border: "1px solid #333",
-          background: "#111827",
+          border:
+            "1px solid #333",
+          background:
+            "#111827",
         }}
       />
 
@@ -225,6 +276,23 @@ function App() {
         {" "}
         {fftPeak}
       </p>
+
+      <h2
+        style={{
+          marginTop:
+            "30px",
+        }}
+      >
+        Spectrogram
+      </h2>
+
+      {analyser && (
+        <Spectrogram
+          analyser={
+            analyser
+          }
+        />
+      )}
     </div>
   );
 }
