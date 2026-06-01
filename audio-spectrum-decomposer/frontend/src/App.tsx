@@ -1,75 +1,166 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function App() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const waveformCanvasRef =
+    useRef<HTMLCanvasElement>(null);
+
+  const fftCanvasRef =
+    useRef<HTMLCanvasElement>(null);
+
+  const [fftPeak, setFftPeak] = useState(0);
 
   useEffect(() => {
     let animationId: number;
 
     const setupAudio = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
+      const stream =
+        await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
 
-      const audioContext = new AudioContext();
+      const audioContext =
+        new AudioContext();
 
       const source =
-        audioContext.createMediaStreamSource(stream);
+        audioContext.createMediaStreamSource(
+          stream
+        );
 
-      const analyser = audioContext.createAnalyser();
+      const analyser =
+        audioContext.createAnalyser();
 
       analyser.fftSize = 2048;
 
       source.connect(analyser);
 
-      const bufferLength =
-        analyser.frequencyBinCount;
-
-      const dataArray = new Uint8Array(bufferLength);
-
-      const canvas = canvasRef.current;
-
-      if (!canvas) return;
-
-      const ctx = canvas.getContext("2d");
-
-      if (!ctx) return;
-
-      const draw = () => {
-        analyser.getByteTimeDomainData(dataArray);
-
-        ctx.clearRect(
-          0,
-          0,
-          canvas.width,
-          canvas.height
+      const waveformBuffer =
+        new Uint8Array(
+          analyser.frequencyBinCount
         );
 
-        ctx.beginPath();
+      const fftBuffer =
+        new Uint8Array(
+          analyser.frequencyBinCount
+        );
 
-        const sliceWidth =
-          canvas.width / bufferLength;
+      const waveformCanvas =
+        waveformCanvasRef.current;
+
+      const fftCanvas =
+        fftCanvasRef.current;
+
+      if (!waveformCanvas || !fftCanvas)
+        return;
+
+      const waveCtx =
+        waveformCanvas.getContext("2d");
+
+      const fftCtx =
+        fftCanvas.getContext("2d");
+
+      if (!waveCtx || !fftCtx)
+        return;
+
+      const draw = () => {
+        analyser.getByteTimeDomainData(
+          waveformBuffer
+        );
+
+        analyser.getByteFrequencyData(
+          fftBuffer
+        );
+
+        //------------------
+        // WAVEFORM
+        //------------------
+
+        waveCtx.clearRect(
+          0,
+          0,
+          waveformCanvas.width,
+          waveformCanvas.height
+        );
+
+        waveCtx.beginPath();
 
         let x = 0;
 
-        for (let i = 0; i < bufferLength; i++) {
-          const v = dataArray[i] / 128.0;
+        const sliceWidth =
+          waveformCanvas.width /
+          waveformBuffer.length;
+
+        for (
+          let i = 0;
+          i < waveformBuffer.length;
+          i++
+        ) {
+          const v =
+            waveformBuffer[i] / 128.0;
 
           const y =
-            (v * canvas.height) / 2;
+            (v *
+              waveformCanvas.height) /
+            2;
 
-          if (i === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
+          if (i === 0)
+            waveCtx.moveTo(x, y);
+          else waveCtx.lineTo(x, y);
 
           x += sliceWidth;
         }
 
-        ctx.strokeStyle = "#00ff88";
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        waveCtx.strokeStyle =
+          "#00ff88";
+
+        waveCtx.lineWidth = 2;
+
+        waveCtx.stroke();
+
+        //------------------
+        // FFT
+        //------------------
+
+        fftCtx.clearRect(
+          0,
+          0,
+          fftCanvas.width,
+          fftCanvas.height
+        );
+
+        const barWidth =
+          fftCanvas.width /
+          fftBuffer.length;
+
+        let peak = 0;
+
+        for (
+          let i = 0;
+          i < fftBuffer.length;
+          i++
+        ) {
+          const value =
+            fftBuffer[i];
+
+          if (value > peak)
+            peak = value;
+
+          const barHeight =
+            (value / 255) *
+            fftCanvas.height;
+
+          fftCtx.fillStyle =
+            "#00aaff";
+
+          fftCtx.fillRect(
+            i * barWidth,
+            fftCanvas.height -
+              barHeight,
+            barWidth,
+            barHeight
+          );
+        }
+
+        setFftPeak(peak);
 
         animationId =
           requestAnimationFrame(draw);
@@ -80,29 +171,60 @@ function App() {
 
     setupAudio();
 
-    return () => cancelAnimationFrame(animationId);
+    return () =>
+      cancelAnimationFrame(
+        animationId
+      );
   }, []);
 
   return (
     <div
       style={{
-        padding: "20px",
         background: "#0f172a",
         minHeight: "100vh",
         color: "white",
+        padding: "20px",
       }}
     >
-      <h1>Audio Spectrum Decomposer</h1>
+      <h1>
+        Audio Spectrum Decomposer
+      </h1>
+
+      <h2>Waveform</h2>
 
       <canvas
-        ref={canvasRef}
+        ref={waveformCanvasRef}
         width={1200}
-        height={400}
+        height={250}
         style={{
           border: "1px solid #333",
           background: "#111827",
         }}
       />
+
+      <h2
+        style={{
+          marginTop: "30px",
+        }}
+      >
+        FFT Spectrum
+      </h2>
+
+      <canvas
+        ref={fftCanvasRef}
+        width={1200}
+        height={300}
+        style={{
+          border: "1px solid #333",
+          background: "#111827",
+        }}
+      />
+
+      <p>
+        Peak Magnitude:
+        {" "}
+        {fftPeak}
+      </p>
     </div>
   );
 }
