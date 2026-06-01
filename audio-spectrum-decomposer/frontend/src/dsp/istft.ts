@@ -1,82 +1,117 @@
-export interface ISTFTOptions {
-  windowSize?: number;
-  hopSize?: number;
-  window?: "hann" | "hamming" | "blackman";
-}
+import type {
+  STFTResult,
+} from "./stft";
 
-export function istft(
-  magnitudes: number[][],
-  phases: number[][],
-  options: ISTFTOptions = {}
+export function computeISTFT(
+  stft: STFTResult,
+  frameSize = 1024,
+  hopSize = 512
 ): Float32Array {
-  const windowSize = options.windowSize || 2048;
-  const hopSize = options.hopSize || windowSize / 4;
-  const windowType = options.window || "hann";
+  const outputLength =
+    (stft.frames.length - 1) *
+      hopSize +
+    frameSize;
 
-  if (magnitudes.length !== phases.length) {
-    throw new Error("Magnitudes and phases must have same number of frames");
+  const output =
+    new Float32Array(
+      outputLength
+    );
+
+  const window =
+    new Float32Array(
+      frameSize
+    );
+
+  for (
+    let n = 0;
+    n < frameSize;
+    n++
+  ) {
+    window[n] =
+      0.5 *
+      (
+        1 -
+        Math.cos(
+          (2 *
+            Math.PI *
+            n) /
+            (frameSize - 1)
+        )
+      );
   }
 
-  const numFrames = magnitudes.length;
-  const outputLength = (numFrames - 1) * hopSize + windowSize;
-  const output = new Float32Array(outputLength);
+  stft.frames.forEach(
+    (frame, frameIndex) => {
+      const timeDomain =
+        inverseDFT(
+          frame.real,
+          frame.imag
+        );
 
-  const window = createWindow(windowSize, windowType);
+      const start =
+        frameIndex *
+        hopSize;
 
-  for (let frameIdx = 0; frameIdx < numFrames; frameIdx++) {
-    const magnitude = magnitudes[frameIdx];
-    const phase = phases[frameIdx];
-    const frame = ifft(magnitude, phase, windowSize);
-
-    const offset = frameIdx * hopSize;
-    for (let i = 0; i < windowSize; i++) {
-      if (offset + i < outputLength) {
-        output[offset + i] += (frame[i] * window[i]) / hopSize;
+      for (
+        let i = 0;
+        i < frameSize;
+        i++
+      ) {
+        output[
+          start + i
+        ] +=
+          timeDomain[i] *
+          window[i];
       }
     }
-  }
+  );
 
   return output;
 }
 
-function createWindow(size: number, type: "hann" | "hamming" | "blackman"): Float32Array {
-  const window = new Float32Array(size);
+function inverseDFT(
+  real: Float32Array,
+  imag: Float32Array
+): Float32Array {
+  const N =
+    real.length;
 
-  for (let i = 0; i < size; i++) {
-    switch (type) {
-      case "hann":
-        window[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / (size - 1)));
-        break;
-      case "hamming":
-        window[i] = 0.54 - 0.46 * Math.cos(2 * Math.PI * i / (size - 1));
-        break;
-      case "blackman":
-        window[i] =
-          0.42 -
-          0.5 * Math.cos((2 * Math.PI * i) / (size - 1)) +
-          0.08 * Math.cos((4 * Math.PI * i) / (size - 1));
-        break;
+  const output =
+    new Float32Array(N);
+
+  for (
+    let n = 0;
+    n < N;
+    n++
+  ) {
+    let sum = 0;
+
+    for (
+      let k = 0;
+      k < N;
+      k++
+    ) {
+      const angle =
+        (2 *
+          Math.PI *
+          k *
+          n) /
+        N;
+
+      sum +=
+        real[k] *
+          Math.cos(
+            angle
+          ) -
+        imag[k] *
+          Math.sin(
+            angle
+          );
     }
+
+    output[n] =
+      sum / N;
   }
 
-  return window;
-}
-
-function ifft(magnitude: number[], phase: number[], size: number): Float32Array {
-  const frame = new Float32Array(size);
-
-  for (let t = 0; t < size; t++) {
-    let real = 0;
-    let imag = 0;
-
-    for (let k = 0; k < magnitude.length; k++) {
-      const angle = (2 * Math.PI * k * t) / size;
-      real += magnitude[k] * Math.cos(phase[k] + angle);
-      imag += magnitude[k] * Math.sin(phase[k] + angle);
-    }
-
-    frame[t] = real / magnitude.length;
-  }
-
-  return frame;
+  return output;
 }
