@@ -1,0 +1,59 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "🏠 Mechanics App Hub",
+            "file": "${workspaceFolder}/mechanics_app/index.html"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "📐 Problem 2/50 — Forearm Moment Solver",
+            "file": "${workspaceFolder}/mechanics_app/problem_2_50.html"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "📄 Problem 2/50 — Blueprint",
+            "file": "${workspaceFolder}/mechanical_webapp_blueprint.html"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "🏗️ Problem 4/22 — Truss Solver",
+            "file": "${workspaceFolder}/mechanics_app/problem_4_22.html"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "📄 Problem 4/22 — Blueprint",
+            "file": "${workspaceFolder}/mechanics_app/blueprint_4_22.html"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "📐 Problem A/16 — Area Moment of Inertia Solver",
+            "file": "${workspaceFolder}/mechanics_app/problem_a_16.html"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Open index",
+            "file": "${workspaceFolder}/index.html"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Open Mechanical Webapp Blueprint",
+            "file": "${workspaceFolder}/mechanical_webapp_blueprint.html"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Open Timepiece Clock",
+            "file": "${workspaceFolder}/timepice.html"
+        }
+    ]
+}

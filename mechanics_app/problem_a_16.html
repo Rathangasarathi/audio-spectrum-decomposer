@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Meriam &amp; Kraige A/16 — Area Moment of Inertia</title>
+  <meta name="description" content="Interactive solver for Meriam &amp; Kraige Problem A/16 – Area Moment of Inertia and Radius of Gyration." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0a15;
+      --surface: #15121e;
+      --surface2: #1e1a2b;
+      --border: rgba(255,255,255,0.08);
+      --accent: #a78bfa;
+      --accent-glow: rgba(167,139,250,0.15);
+      --accent-dark: #7c3aed;
+      --blue: #5ba3f5;
+      --green: #3de88a;
+      --gold: #e0b060;
+      --text: #eee8d8;
+      --muted: #8b8598;
+      --dim: #252033;
+      --radius: 16px;
+      --tr: 0.22s cubic-bezier(0.4,0,0.2,1);
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0 }
+    html,body { min-height:100%; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; font-size:14px; line-height:1.6 }
+    ::-webkit-scrollbar { width:5px }
+    ::-webkit-scrollbar-thumb { background:var(--dim); border-radius:3px }
+
+    .topbar { display:flex; align-items:center; gap:14px; padding:16px 20px; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(13,10,21,0.94); backdrop-filter:blur(16px); z-index:50 }
+    .brand { display:flex; align-items:center; gap:10px }
+    .brand-icon { width:32px; height:32px; background:linear-gradient(135deg,var(--accent),var(--accent-dark)); color:#fff; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; box-shadow:0 0 14px rgba(167,139,250,0.4) }
+    .brand-name { font-size:17px; font-weight:700; color:var(--accent); letter-spacing:-0.02em }
+    .brand-sub { font-size:11px; color:var(--muted); margin-left:auto; font-style:italic }
+    .back-btn { all:unset; cursor:pointer; font-size:12px; color:var(--muted); padding:6px 12px; border:1px solid var(--border); border-radius:6px; transition:all var(--tr) }
+    .back-btn:hover { color:var(--accent); border-color:var(--accent); background:var(--accent-glow) }
+
+    .wrap { max-width:1120px; margin:0 auto; padding:0 20px 60px }
+    .hero { padding:36px 0 24px }
+    .hero-badge { font-size:10px; font-weight:600; letter-spacing:0.28em; text-transform:uppercase; color:var(--accent); margin-bottom:10px }
+    .hero h1 { font-size:clamp(1.5rem,4vw,2.2rem); font-weight:700; letter-spacing:-0.02em; margin-bottom:8px }
+    .hero h1 em { color:var(--accent); font-style:normal }
+    .hero p { color:var(--muted); font-size:13.5px; max-width:640px; line-height:1.7 }
+    .problem-text { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin-top:14px; font-size:13px; color:var(--text); line-height:1.8 }
+
+    .main-grid { display:grid; grid-template-columns:1fr 310px; gap:18px; align-items:start }
+    @media(max-width:850px) { .main-grid { grid-template-columns:1fr } }
+
+    .canvas-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; position:relative; }
+    .panel-header { padding:10px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; font-size:10px; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:var(--muted) }
+    .live-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); animation:pulse 2s ease-in-out infinite; box-shadow:0 0 6px var(--accent) }
+    @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 6px var(--accent)} 50%{opacity:.3;box-shadow:none} }
+    canvas { display:block; width:100%; background:#07050a; cursor: crosshair; }
+
+    /* Input Panel */
+    .input-panel { background: linear-gradient(160deg, #161224 0%, #15121e 60%, #1a162b 100%); border: 1px solid rgba(167,139,250,0.22); border-radius: var(--radius); display: flex; flex-direction: column; gap: 0; overflow: hidden; position: relative; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    .input-panel::before {
+      content: ''; position: absolute; inset: 0; border-radius: var(--radius); padding: 1px;
+      background: linear-gradient(135deg, rgba(167,139,250,0.3), rgba(91,163,245,0.2), rgba(224,176,96,0.2), rgba(167,139,250,0.3));
+      background-size: 300% 300%; animation: borderShimmer 6s ease infinite;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+    }
+    @keyframes borderShimmer {
+      0%   { background-position: 0% 50% }
+      50%  { background-position: 100% 50% }
+      100% { background-position: 0% 50% }
+    }
+
+    .panel-title-bar { padding: 14px 18px 12px; background: linear-gradient(135deg, rgba(167,139,250,0.08), rgba(91,163,245,0.05)); border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 10px; }
+    .panel-title-icon { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); display: flex; align-items: center; justify-content: center; font-size: 13px; box-shadow: 0 0 10px rgba(167,139,250,0.4); color:#fff; }
+    .panel-title-text { font-size:10px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; color:var(--text); }
+    .panel-title-sub  { font-size:9px; color:var(--muted); margin-top:1px; }
+
+    .panel-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .sec-block { border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+    .sec-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 9px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+    .sec-header.geo { background: linear-gradient(90deg, rgba(167,139,250,0.12), transparent); color: var(--accent); border-bottom: 1px solid rgba(167,139,250,0.15); }
+    .sec-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    .sec-dot.geo { background:var(--accent); box-shadow:0 0 5px var(--accent); }
+    .sec-body { padding: 10px 12px; background: rgba(0,0,0,0.18); display:flex; flex-direction:column; gap:8px; }
+
+    .field { display:flex; flex-direction:column; gap:4px; }
+    .field label { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; letter-spacing:.05em; }
+    .field label em { color:var(--text); font-style:italic; font-weight:600; }
+    .field input { width:100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color:var(--text); font-family:'DM Mono',monospace; font-size:14px; padding:8px 12px; outline:none; transition: border-color var(--tr), box-shadow var(--tr), background var(--tr); }
+    .field input:focus { border-color: var(--accent); background: rgba(167,139,250,0.05); box-shadow: 0 0 0 3px rgba(167,139,250,0.1); }
+    .field .sub-note { font-size:9.5px; color:var(--muted); line-height:1.4; margin-top:2px; }
+
+    .btn-compute { all:unset; cursor:pointer; width:100%; padding: 13px 0; background: linear-gradient(135deg, var(--accent-dark), var(--accent), #c4b5fd, var(--accent-dark)); background-size: 300% 100%; color: #1a162b; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; border-radius: 10px; text-align:center; transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(167,139,250,0.25); animation: borderShimmer 4s ease infinite; margin-top:4px; }
+    .btn-compute:hover { background-position: 100% 0; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(167,139,250,0.4); }
+    .btn-compute:active { transform:scale(0.98); }
+
+    .result-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-top:16px; animation:fadeUp .3s ease; display:none; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} }
+    .result-top { padding:16px 20px; background:rgba(167,139,250,0.08); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px }
+    .result-top h3 { font-size:14px; font-weight:600 }
+
+    .ans-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:16px 20px; border-bottom:1px solid var(--border); }
+    @media(max-width:600px) { .ans-grid { grid-template-columns:1fr } }
+    .ans-box { background:var(--surface2); border-radius:12px; padding:16px 18px; border:1px solid var(--border); transition:transform 0.15s, box-shadow 0.15s }
+    .ans-box:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.3) }
+    .ans-box .lbl { font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:6px }
+    .ans-box .val { font-family:'DM Mono',monospace; font-size:20px; font-weight:600; color:var(--accent); line-height:1.3; letter-spacing:-0.01em }
+    .ans-box .note { font-size:11px; color:var(--muted); margin-top:4px }
+
+    .steps-section { padding:28px 28px }
+    .steps-section h4 { font-size:12px; font-weight:700; letter-spacing:.20em; text-transform:uppercase; color:var(--muted); margin-bottom:20px }
+    .step { display:flex; gap:18px; margin-bottom:24px }
+    .step-n { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent-dark)); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#fff; flex-shrink:0; margin-top:3px; box-shadow: 0 0 10px rgba(167,139,250,0.3); }
+    .step-body { font-family:'DM Mono',monospace; font-size:15px; line-height:2.2; color:var(--text); white-space:pre-wrap }
+    .step-body .eq { color:var(--gold) }
+    .step-body .num { color:var(--blue) }
+    .step-body .res { color:var(--accent); font-weight:500 }
+
+    /* Fullscreen Support */
+    .fs-btn { all:unset; cursor:pointer; margin-left:auto; font-size:16px; color:var(--muted); padding:4px 10px; border-radius:6px; transition:all 0.25s; line-height:1 }
+    .fs-btn:hover { color:var(--accent); background:rgba(167,139,250,0.15) }
+    .canvas-panel.fullscreen { position:fixed; inset:0; z-index:9999; border-radius:0; border:none; background:#030206; display:flex; flex-direction:column }
+    .canvas-panel.fullscreen .panel-header { border-radius:0; background:linear-gradient(180deg,rgba(13,10,21,0.98),rgba(7,5,10,0.95)); backdrop-filter:blur(12px); flex-shrink:0; padding:14px 24px; font-size:11px; border-bottom:1px solid rgba(167,139,250,0.12) }
+    .canvas-panel.fullscreen canvas { flex:1; width:100% !important; height:100% !important }
+    
+    .tooltip { position: absolute; background: rgba(13,10,21,0.9); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 11px; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 100; box-shadow: 0 8px 20px rgba(0,0,0,0.4); color: var(--text); backdrop-filter: blur(8px); }
+    .tooltip .x-val { color: var(--gold); }
+    .tooltip .y-val { color: var(--blue); }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon">Σ</div>
+      <div class="brand-name">StaticsSolver</div>
+    </div>
+    <a class="back-btn" href="index.html">← Back to Hub</a>
+    <div class="brand-sub">Meriam &amp; Kraige — Engineering Mechanics: Statics</div>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-badge">Appendix A · Area Moments of Inertia · Problem A/16</div>
+      <h1>Area Moment of Inertia <em>Solver</em></h1>
+      <p>Determine the polar radius of gyration about a polar axis passing through the midpoint A of the hypotenuse of the right-triangular area.</p>
+      <div class="problem-text">
+        <strong>Problem A/16</strong> — Determine the radius of gyration about a polar axis through the midpoint A of the hypotenuse of the right-triangular area. (Hint: Simplify your calculation by observing the results for a rectangular area.)
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <div class="canvas-panel" id="canvasPanel">
+        <div class="panel-header">
+          <span class="live-dot"></span>Live Diagram — Interactive Right Triangle
+          <button class="fs-btn" id="btn-fs" onclick="toggleFullscreen()" title="Toggle fullscreen">⤢</button>
+        </div>
+        <canvas id="c"></canvas>
+        <div class="tooltip" id="tooltip"></div>
+      </div>
+
+      <div class="input-panel">
+        <div class="panel-title-bar">
+          <div class="panel-title-icon">📐</div>
+          <div>
+            <div class="panel-title-text">Parameters</div>
+            <div class="panel-title-sub">Problem A/16</div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="sec-block">
+            <div class="sec-header geo"><span class="sec-dot geo"></span>Dimensions</div>
+            <div class="sec-body">
+              <div class="field">
+                <label><em>b</em> — Base width (mm)</label>
+                <input type="text" id="b_val" value="30" />
+                <div class="sub-note">Horizontal dimension of the triangle.</div>
+              </div>
+              <div class="field">
+                <label><em>h</em> — Height (mm)</label>
+                <input type="text" id="h_val" value="40" />
+                <div class="sub-note">Vertical dimension of the triangle.</div>
+              </div>
+            </div>
+          </div>
+          <button class="btn-compute" onclick="compute()">⟹ Compute Solution</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-panel" id="resultPanel">
+      <div class="result-top">
+        <span style="font-size:22px; color:var(--accent)">✓</span>
+        <h3>Solution — Problem A/16</h3>
+      </div>
+      <div class="ans-grid">
+        <div class="ans-box"><div class="lbl">Area of Triangle</div><div class="val" id="ans-A">—</div><div class="note">A = (1/2)bh</div></div>
+        <div class="ans-box"><div class="lbl">Polar Radius of Gyration</div><div class="val" id="ans-k">—</div><div class="note">k<sub>A</sub> about midpoint of hypotenuse</div></div>
+      </div>
+      <div class="steps-section">
+        <h4>Step-by-Step Derivation</h4>
+        <div id="stepsContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const cvs = document.getElementById('c');
+    const ctx = cvs.getContext('2d');
+    const tooltip = document.getElementById('tooltip');
+    let CW=0, CH=0;
+    
+    let plotData = { b: 30, h: 40, layout: {} };
+
+    function parseField(id, def) {
+      const raw = document.getElementById(id).value.trim();
+      if (raw === '') return { val: def, sym: String(def), isNum: true };
+      const v = parseFloat(raw);
+      const ok = !isNaN(v) && isFinite(v);
+      return { val: ok ? v : def, sym: raw, isNum: ok };
+    }
+
+    function getInputs() {
+      return {
+        b: parseField('b_val', 30),
+        h: parseField('h_val', 40)
+      };
+    }
+
+    function getVals() {
+      const i = getInputs();
+      return {
+        b: Math.max(i.b.val, 0.1),
+        h: Math.max(i.h.val, 0.1)
+      };
+    }
+
+    function toggleFullscreen() {
+      document.getElementById('canvasPanel').classList.toggle('fullscreen');
+      resize();
+    }
+
+    function resize() {
+      const panel = document.getElementById('canvasPanel');
+      const rect = panel.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      CW = rect.width;
+      CH = panel.classList.contains('fullscreen') ? rect.height : Math.max(500, CW * 0.7);
+      cvs.width = CW * dpr; cvs.height = CH * dpr;
+      cvs.style.width = CW + 'px'; cvs.style.height = CH + 'px';
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.scale(dpr,dpr);
+      draw();
+    }
+    window.addEventListener('resize', resize);
+
+    function drawDimension(ctx, x1, y1, x2, y2, label, offset, isVertical) {
+      ctx.strokeStyle = '#8b8598'; ctx.lineWidth = 1; ctx.fillStyle = '#8b8598';
+      
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      
+      if (isVertical) {
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1 + offset, y1); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x2 + offset, y2); ctx.stroke();
+        
+        ctx.beginPath(); ctx.moveTo(x1 + offset - 5, y1); ctx.lineTo(x2 + offset - 5, y2); ctx.stroke();
+        
+        ctx.font = '13px DM Mono'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(label, x1 + offset + 5, (y1 + y2) / 2);
+      } else {
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1, y1 + offset); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x2, y2 + offset); ctx.stroke();
+        
+        ctx.beginPath(); ctx.moveTo(x1, y1 + offset - 5); ctx.lineTo(x2, y2 + offset - 5); ctx.stroke();
+        
+        ctx.font = '13px DM Mono'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(label, (x1 + x2) / 2, y1 + offset + 2);
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0,0,CW,CH);
+      
+      // Draw grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1;
+      for(let i=0; i<CW; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,CH); ctx.stroke(); }
+      for(let i=0; i<CH; i+=40) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(CW,i); ctx.stroke(); }
+
+      const inp = getInputs();
+      const v = getVals();
+      
+      // Determine scale to fit triangle in view
+      const pad = 100;
+      const W = CW - pad*2;
+      const H = CH - pad*2;
+      
+      const scaleX = W / v.b;
+      const scaleY = H / v.h;
+      const scale = Math.min(scaleX, scaleY);
+      
+      const drawW = v.b * scale;
+      const drawH = v.h * scale;
+      
+      // Center the drawing
+      const ox = (CW - drawW) / 2;
+      const oy = CH - (CH - drawH) / 2; // Origin is bottom-left of the triangle bounding box
+      
+      plotData.layout = { ox, oy, scale };
+
+      // Vertices: (ox, oy) [bottom-left], (ox+drawW, oy) [bottom-right], (ox+drawW, oy-drawH) [top-right]
+      const pt1 = {x: ox, y: oy}; // Left vertex
+      const pt2 = {x: ox + drawW, y: oy}; // Right vertex (Right angle)
+      const pt3 = {x: ox + drawW, y: oy - drawH}; // Top vertex
+
+      // Draw the other half of the rectangle (hint visualizer)
+      const ptTopLeft = {x: ox, y: oy - drawH};
+      ctx.fillStyle = 'rgba(167,139,250,0.05)';
+      ctx.beginPath();
+      ctx.moveTo(pt1.x, pt1.y);
+      ctx.lineTo(pt3.x, pt3.y);
+      ctx.lineTo(ptTopLeft.x, ptTopLeft.y);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Draw dashed border for the other half
+      ctx.strokeStyle = 'rgba(167,139,250,0.2)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(pt1.x, pt1.y);
+      ctx.lineTo(ptTopLeft.x, ptTopLeft.y);
+      ctx.lineTo(pt3.x, pt3.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // Draw Triangle (Solid)
+      ctx.fillStyle = 'rgba(167,139,250,0.2)';
+      ctx.beginPath();
+      ctx.moveTo(pt1.x, pt1.y);
+      ctx.lineTo(pt2.x, pt2.y);
+      ctx.lineTo(pt3.x, pt3.y);
+      ctx.closePath();
+      ctx.fill();
+      
+      ctx.strokeStyle = '#a78bfa';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(pt1.x, pt1.y);
+      ctx.lineTo(pt2.x, pt2.y);
+      ctx.lineTo(pt3.x, pt3.y);
+      ctx.closePath();
+      ctx.stroke();
+
+      // Right angle symbol
+      ctx.strokeStyle = '#a78bfa';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(pt2.x - 15, pt2.y);
+      ctx.lineTo(pt2.x - 15, pt2.y - 15);
+      ctx.lineTo(pt2.x, pt2.y - 15);
+      ctx.stroke();
+
+      // Midpoint A
+      const midA = {x: (pt1.x + pt3.x)/2, y: (pt1.y + pt3.y)/2};
+      ctx.fillStyle = '#3de88a';
+      ctx.beginPath();
+      ctx.arc(midA.x, midA.y, 5, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 16px Inter';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('A', midA.x - 10, midA.y - 10);
+      
+      // Polar axis indicator (a subtle circle around A)
+      ctx.strokeStyle = 'rgba(61,232,138,0.5)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(midA.x, midA.y, 20, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // Dimensions
+      drawDimension(ctx, pt1.x, pt1.y, pt2.x, pt2.y, inp.b.isNum ? v.b + ' mm' : inp.b.sym, 40, false);
+      drawDimension(ctx, pt2.x, pt2.y, pt3.x, pt3.y, inp.h.isNum ? v.h + ' mm' : inp.h.sym, 40, true);
+    }
+
+    cvs.addEventListener('mousemove', (e) => {
+      const rect = cvs.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left) * (cvs.width / rect.width / (window.devicePixelRatio || 1));
+      const mouseY = (e.clientY - rect.top) * (cvs.height / rect.height / (window.devicePixelRatio || 1));
+      
+      const p = plotData.layout;
+      if (!p) return;
+
+      const pt1 = {x: p.ox, y: p.oy};
+      const pt3 = {x: p.ox + plotData.b * p.scale, y: p.oy - plotData.h * p.scale};
+      const midA = {x: (pt1.x + pt3.x)/2, y: (pt1.y + pt3.y)/2};
+
+      // Check distance to point A
+      const distToA = Math.hypot(mouseX - midA.x, mouseY - midA.y);
+
+      if (distToA < 25) {
+        tooltip.innerHTML = `Point A<br>Polar Axis Location`;
+        tooltip.style.left = (e.clientX + 15) + 'px';
+        tooltip.style.top = (e.clientY + 15) + 'px';
+        tooltip.style.opacity = 1;
+      } else {
+        tooltip.style.opacity = 0;
+      }
+    });
+
+    cvs.addEventListener('mouseleave', () => { tooltip.style.opacity = 0; });
+
+    function compute() {
+      const inp = getInputs();
+      const anySymbol = !inp.b.isNum || !inp.h.isNum;
+      const v = getVals();
+      
+      const sb = inp.b.sym, sh = inp.h.sym;
+
+      const area = 0.5 * v.b * v.h;
+      const kA = Math.sqrt((v.b*v.b + v.h*v.h) / 12);
+
+      let ansA = area.toFixed(2) + ' mm²';
+      let ansK = kA.toFixed(2) + ' mm';
+
+      if (anySymbol) {
+        ansA = `(${sb} × ${sh}) / 2`;
+        ansK = `√((${sb}² + ${sh}²) / 12)`;
+      }
+
+      document.getElementById('ans-A').textContent = ansA;
+      document.getElementById('ans-k').textContent = ansK;
+
+      let step1 = `<strong>Area of the Triangle</strong>\n<span class="eq">Area (A) = ½ × base × height</span>\nA = ½ × ${sb} × ${sh}\nA = <span class="res">${ansA}</span>\n\n`;
+
+      let step2 = `<strong>Polar Moment of Inertia via Rectangle Property</strong>\nThe hint suggests using a full ${sb} × ${sh} rectangular area.\n`;
+      step2 += `The polar moment of inertia of a rectangle about its centroid (which coincides with point A) is:\n`;
+      step2 += `<span class="eq">J_rect = (1/12) × b × h × (b² + h²)</span>\n`;
+      step2 += `J_rect = (1/12) × ${sb} × ${sh} × (${sb}² + ${sh}²)\n\n`;
+      step2 += `The given right triangle is exactly half of this rectangle. By symmetry, its polar moment of inertia about point A is exactly half of the rectangle's:\n`;
+      step2 += `<span class="eq">J_triangle = ½ × J_rect = (1/24) × b × h × (b² + h²)</span>\n`;
+
+      let step3 = `<strong>Radius of Gyration (k<sub>A</sub>)</strong>\nNotice that since both the polar moment of inertia and the area of the triangle are exactly half of the rectangle's, the radius of gyration $k_A$ is the same for both!\n`;
+      step3 += `<span class="eq">k_A² = J_triangle / A_triangle = J_rect / A_rect</span>\n`;
+      step3 += `k_A² = [ (1/24) × ${sb} × ${sh} × (${sb}² + ${sh}²) ] / [ ½ × ${sb} × ${sh} ]\n`;
+      step3 += `k_A² = (${sb}² + ${sh}²) / 12\n`;
+      step3 += `k_A = √[ (${sb}² + ${sh}²) / 12 ]\n`;
+      if (!anySymbol) {
+        step3 += `k_A = √[ (${v.b}² + ${v.h}²) / 12 ]\n`;
+        step3 += `k_A = √[ (${v.b*v.b} + ${v.h*v.h}) / 12 ]\n`;
+        step3 += `k_A = √[ ${(v.b*v.b + v.h*v.h)} / 12 ] = √${((v.b*v.b + v.h*v.h)/12).toFixed(3)}\n`;
+      }
+      step3 += `k_A = <span class="res">${ansK}</span>`;
+
+      document.getElementById('stepsContainer').innerHTML = `
+        <div class="step"><div class="step-n">1</div><div class="step-body">${step1}</div></div>
+        <div class="step"><div class="step-n">2</div><div class="step-body">${step2}</div></div>
+        <div class="step"><div class="step-n">3</div><div class="step-body">${step3}</div></div>
+      `;
+      document.getElementById('resultPanel').style.display = 'block';
+      plotData.b = v.b; plotData.h = v.h;
+      draw();
+    }
+
+    document.querySelectorAll('input').forEach(el => el.addEventListener('input', () => { 
+      document.getElementById('resultPanel').style.display = 'none';
+      const v = getVals(); plotData.b = v.b; plotData.h = v.h;
+      draw(); 
+    }));
+    
+    window.addEventListener('load', () => { 
+      resize(); 
+      compute(); 
+    });
+  </script>
+</body>
+</html>

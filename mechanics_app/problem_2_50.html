@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Meriam & Kraige 2/50 — Forearm Moment Solver</title>
+  <meta name="description" content="Interactive solver for Meriam & Kraige Problem 2/50." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0d10;
+      --surface: #16161e;
+      --surface2: #1e1e28;
+      --border: rgba(255, 255, 255, 0.07);
+      --gold: #c8a050;
+      --gold-glow: rgba(200, 160, 80, 0.15);
+      --blue: #4a90d9;
+      --green: #4dc87a;
+      --red: #e06060;
+      --text: #f0ead8;
+      --muted: #7a7468;
+      --dim: #2a2a35;
+      --radius: 14px;
+      --tr: 0.2s ease;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      line-height: 1.6
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--dim);
+      border-radius: 3px
+    }
+
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 20px 60px
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13, 13, 16, 0.93);
+      backdrop-filter: blur(12px);
+      z-index: 50
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--gold);
+      color: var(--bg);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      font-weight: 700
+    }
+
+    .brand-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: -0.02em
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-left: auto;
+      font-style: italic
+    }
+
+    .back-btn {
+      all: unset;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: all var(--tr)
+    }
+
+    .back-btn:hover {
+      color: var(--gold);
+      border-color: var(--gold)
+    }
+
+    .hero {
+      padding: 36px 0 24px
+    }
+
+    .hero-badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px
+    }
+
+    .hero h1 {
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px
+    }
+
+    .hero h1 em {
+      color: var(--gold);
+      font-style: normal
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 13.5px;
+      max-width: 600px;
+      line-height: 1.7
+    }
+
+    .problem-text {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--gold);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 14px 18px;
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.8
+    }
+
+    .problem-text strong {
+      color: var(--gold)
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 16px;
+      align-items: start
+    }
+
+    @media(max-width:760px) {
+      .main-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .canvas-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden
+    }
+
+    .panel-header {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--muted)
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease-in-out infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .3
+      }
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      background: #050912
+    }
+
+    .input-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .input-panel>h3 {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding-bottom: 10px;
+    }
+
+    .segmented-control {
+      display: flex;
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .segmented-control label {
+      flex: 1;
+      text-align: center;
+      padding: 8px 4px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      transition: all 0.2s;
+    }
+    .segmented-control input[type="radio"] {
+      display: none;
+    }
+    .segmented-control input[type="radio"]:checked + label {
+      background: var(--dim);
+      color: var(--text);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .sec-lbl {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: -2px;
+      margin-top: 6px
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px
+    }
+
+    .field label {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace
+    }
+
+    .field label em {
+      color: var(--text);
+      font-style: italic
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      padding: 7px 10px;
+      outline: none;
+      transition: border-color var(--tr)
+    }
+
+    .field input:focus {
+      border-color: var(--gold)
+    }
+
+    .field input::placeholder {
+      color: var(--dim)
+    }
+
+    .field input[readonly] {
+      opacity: 0.55;
+      cursor: not-allowed;
+      border-color: transparent;
+      background: rgba(13, 13, 16, 0.5);
+    }
+
+    .angle-warn {
+      display: none;
+      background: rgba(224, 96, 96, 0.12);
+      border: 1px solid rgba(224, 96, 96, 0.35);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #e06060;
+      line-height: 1.6;
+      animation: fadeUp 0.3s ease;
+    }
+
+    .angle-warn.visible {
+      display: block;
+    }
+
+    .bio-note {
+      margin-top: 4px;
+      font-size: 10.5px;
+      color: rgba(200, 160, 100, 0.7);
+      line-height: 1.5;
+      letter-spacing: 0.01em;
+    }
+
+    .hr {
+      height: 1px;
+      background: var(--border);
+      margin: 2px 0
+    }
+
+    .btn-compute {
+      all: unset;
+      cursor: pointer;
+      width: 100%;
+      padding: 12px;
+      background: var(--gold);
+      color: var(--bg);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      border-radius: 8px;
+      text-align: center;
+      transition: all var(--tr);
+      margin-top: 2px
+    }
+
+    .btn-compute:hover {
+      background: #d9b060;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 18px rgba(200, 160, 80, .3)
+    }
+
+    .btn-compute:active {
+      transform: scale(.98)
+    }
+
+    .result-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-top: 16px;
+      animation: fadeUp .3s ease
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+    }
+
+    .result-top {
+      padding: 16px 20px;
+      background: var(--gold-glow);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .result-top h3 {
+      font-size: 14px;
+      font-weight: 600
+    }
+
+    .ans-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .ans-box {
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 18px 20px;
+      border: 1px solid var(--border)
+    }
+
+    .ans-box .lbl {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 7px
+    }
+
+    .ans-box .val {
+      font-family: 'DM Mono', monospace;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--gold);
+      line-height: 1.2;
+      letter-spacing: -0.01em
+    }
+
+    .ans-box .note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 5px
+    }
+
+    .steps-section {
+      padding: 28px 28px
+    }
+
+    .steps-section h4 {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .20em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px
+    }
+
+    .step {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 24px
+    }
+
+    .step-n {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--dim), #2e2e42);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gold);
+      flex-shrink: 0;
+      margin-top: 3px;
+      box-shadow: 0 0 10px rgba(200,160,80,0.2)
+    }
+
+    .step-body {
+      font-family: 'DM Mono', monospace;
+      font-size: 15.5px;
+      line-height: 2.2;
+      color: var(--text);
+      white-space: pre-wrap
+    }
+
+    .step-body .eq {
+      color: var(--gold)
+    }
+
+    .step-body .num {
+      color: var(--blue)
+    }
+
+    .step-body .res {
+      color: var(--green);
+      font-weight: 500
+    }
+
+    /* ── FULLSCREEN MODE ── */
+    .canvas-panel.fullscreen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      border-radius: 0;
+      border: none;
+      background: #030710;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .canvas-panel.fullscreen .panel-header {
+      border-radius: 0;
+      background: linear-gradient(180deg, rgba(13, 13, 20, 0.98), rgba(5, 9, 18, 0.95));
+      backdrop-filter: blur(12px);
+      flex-shrink: 0;
+      padding: 14px 24px;
+      font-size: 11px;
+      border-bottom: 1px solid rgba(200, 160, 80, 0.12);
+    }
+
+    .canvas-panel.fullscreen canvas {
+      flex: 1;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .fs-btn {
+      all: unset;
+      cursor: pointer;
+      margin-left: auto;
+      font-size: 16px;
+      color: var(--muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      transition: all 0.25s;
+      line-height: 1;
+    }
+
+    .fs-btn:hover {
+      color: var(--gold);
+      background: rgba(200, 160, 80, 0.15);
+      box-shadow: 0 0 12px rgba(200, 160, 80, 0.1);
+    }
+
+    /* ── FULLSCREEN ANSWER OVERLAY ── */
+    .fs-answers {
+      display: none;
+    }
+
+    .fs-title {
+      display: none;
+    }
+
+    .canvas-panel.fullscreen .fs-title {
+      display: block;
+      position: absolute;
+      bottom: 28px;
+      left: 28px;
+      z-index: 10;
+      animation: fadeUp 0.4s ease;
+    }
+
+    .fs-title-text {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(200, 160, 80, 0.5);
+    }
+
+    .fs-title-sub {
+      font-size: 18px;
+      font-weight: 300;
+      color: rgba(240, 234, 216, 0.35);
+      margin-top: 2px;
+      letter-spacing: 0.02em;
+    }
+
+    .canvas-panel.fullscreen .fs-answers {
+      display: flex;
+      position: absolute;
+      bottom: 24px;
+      right: 28px;
+      gap: 16px;
+      z-index: 10;
+      animation: fadeUp 0.45s ease;
+    }
+
+    .fs-ans-card {
+      background: rgba(10, 14, 24, 0.7);
+      backdrop-filter: blur(24px) saturate(1.2);
+      border: 1px solid rgba(200, 160, 80, 0.18);
+      border-radius: 14px;
+      padding: 18px 24px 16px;
+      min-width: 200px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 1px rgba(200, 160, 80, 0.3) inset;
+    }
+
+    .fs-ans-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(200, 160, 80, 0.4), transparent);
+    }
+
+    .fs-ans-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 20%;
+      right: 20%;
+      height: 30px;
+      background: radial-gradient(ellipse at center bottom, rgba(200, 160, 80, 0.06), transparent);
+      pointer-events: none;
+    }
+
+    .fs-ans-card .fs-icon {
+      font-size: 14px;
+      margin-bottom: 8px;
+      opacity: 0.7;
+    }
+
+    .fs-ans-card .fs-lbl {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(200, 160, 80, 0.6);
+      margin-bottom: 8px;
+    }
+
+    .fs-ans-card .fs-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--gold);
+      line-height: 1.3;
+      word-break: break-all;
+      text-shadow: 0 0 20px rgba(200, 160, 80, 0.15);
+    }
+
+    .fs-ans-card .fs-note {
+      font-size: 9px;
+      color: rgba(122, 116, 104, 0.8);
+      margin-top: 6px;
+      letter-spacing: 0.08em;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon">Σ</div>
+      <div class="brand-name">StaticsSolver</div>
+    </div>
+    <a class="back-btn" href="index.html">← Back to Hub</a>
+    <div class="brand-sub">Meriam &amp; Kraige — Engineering Mechanics: Statics</div>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-badge">Module 1 · Moments &amp; Couples · Problem 2/50</div>
+      <h1>Forearm <em>Moment Analysis</em></h1>
+      <p>Determine the combined moment about the elbow pivot <strong>O</strong> and find the required biceps tension
+        <strong>T</strong> for equilibrium.
+      </p>
+      <div class="problem-text">
+        <strong>Problem 2/50</strong> — Mass of forearm = 2.3 kg, CG at <em>G</em>. Find the combined moment of the
+        weights about the elbow pivot O, and the biceps tension T so that ΣM<sub>O</sub> = 0.
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <div class="canvas-panel">
+        <div class="panel-header"><span class="live-dot"></span>Live Diagram — updates as you type<button class="fs-btn" id="btn-fs" onclick="toggleFullscreen()" title="Toggle fullscreen">⤢</button></div>
+        <canvas id="c"></canvas>
+        <div class="fs-title">
+          <div class="fs-title-text">Problem 2/50</div>
+          <div class="fs-title-sub">Forearm Moment Analysis</div>
+        </div>
+        <div class="fs-answers">
+          <div class="fs-ans-card">
+            <div class="fs-icon">↻</div>
+            <div class="fs-lbl">Combined Moment</div>
+            <div class="fs-val" id="fs-mw">—</div>
+            <div class="fs-note">about O (Clockwise)</div>
+          </div>
+          <div class="fs-ans-card">
+            <div class="fs-icon">↑</div>
+            <div class="fs-lbl">Biceps Tension T</div>
+            <div class="fs-val" id="fs-T">—</div>
+            <div class="fs-note">for ΣM<sub>O</sub> = 0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-panel">
+        <h3>Input Values</h3>
+        <div class="sec-lbl">Geometry</div>
+        <div class="field"><label><em>θ</em> — Elbow angle: upper arm to forearm (°)</label><input type="text"
+            id="theta" value="55" autocomplete="off" /></div>
+        <div class="field"><label><em>d<sub>T</sub></em> — Horiz. dist. O to biceps tendon (mm)</label><input type="text"
+            id="dT" value="50" autocomplete="off" /></div>
+        <div class="field"><label><em>d<sub>G</sub></em> — Dist. along arm O to G (mm)</label><input type="text"
+            id="dG" value="150" autocomplete="off" /></div>
+        <div class="sec-lbl" style="margin-top: 10px;">Arm Length</div>
+        <div class="field"><label><em>d<sub>A</sub></em> — Horiz. dist. O to A (mm)</label><input type="text"
+            id="dA" value="325" autocomplete="off" /></div>
+        <div class="angle-warn" id="angleWarn">
+          ⚠️ Biologically, the human elbow cannot exceed 180°. The forearm angle has been clamped to the valid range (0°–180°).
+        </div>
+        <div class="angle-warn" id="dGWarn" style="color: var(--gold); border-color: rgba(224,176,96,0.3); background: rgba(224,176,96,0.05);"></div>
+        <div class="hr"></div>
+        <div class="sec-lbl">Masses</div>
+        <div class="field"><label><em>m<sub>arm</sub></em> — Forearm mass (kg)</label><input type="text" id="mArm"
+            value="2.3" autocomplete="off" /></div>
+        <div class="field"><label><em>m<sub>s</sub></em> — Sphere mass (kg)</label><input type="text" id="mSphere"
+            value="3.6" autocomplete="off" /></div>
+        <div class="hr"></div>
+        <div class="sec-lbl">Constant</div>
+        <div class="field"><label><em>g</em> — Gravity (m/s²)</label><input type="text" id="grav" value="9.81"
+            autocomplete="off" /></div>
+        <button class="btn-compute" onclick="compute()">⟹ Compute Solution</button>
+      </div>
+
+    </div>
+
+    <div class="result-panel" id="resultPanel" style="display:none">
+      <div class="result-top">
+        <span style="font-size:22px">&#x2713;</span>
+        <h3>Solution — Problem 2/50</h3>
+        <a href="../mechanical_webapp_blueprint.html" target="_blank" style="margin-left:auto;all:unset;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);border:1px solid rgba(200,160,80,0.3);padding:6px 14px;border-radius:6px;letter-spacing:.05em;transition:all .2s;" onmouseover="this.style.background='rgba(200,160,80,0.1)'" onmouseout="this.style.background=''">&#128196; View Blueprint</a>
+      </div>
+      <div class="ans-grid">
+        <div class="ans-box">
+          <div class="lbl">Combined Moment of Weights</div>
+          <div class="val" id="ans-mw">—</div>
+          <div class="note" id="ans-mw-dir">about O</div>
+        </div>
+        <div class="ans-box">
+          <div class="lbl">Required Biceps Tension T</div>
+          <div class="val" id="ans-T">—</div>
+          <div class="note">for ΣM<sub>O</sub> = 0</div>
+        </div>
+      </div>
+      <div class="steps-section">
+        <h4>Step-by-Step Working</h4>
+        <div id="stepsContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+    const DEG = Math.PI / 180;
+    const cos = d => Math.cos(d * DEG), sin = d => Math.sin(d * DEG), tan = d => Math.tan(d * DEG);
+    const f3 = v => v.toFixed(3), f2 = v => v.toFixed(2), f1 = v => v.toFixed(1);
+
+    // parseField: returns {val (numeric for drawing), sym (display text), isNum}
+    function parseField(id, def) {
+      const raw = document.getElementById(id).value.trim();
+      if (raw === '') return { val: def, sym: String(def), isNum: true };
+      const v = parseFloat(raw);
+      const ok = !isNaN(v) && isFinite(v);  // 0 is a valid input (e.g. theta=0 = straight-down forearm)
+      return { val: ok ? v : def, sym: raw, isNum: ok };
+    }
+
+    const cvs = document.getElementById('c');
+    const ctx = cvs.getContext('2d');
+
+    let DPR = window.devicePixelRatio || 1;
+    let CW = 0, CH = 0;
+
+    function getInputs() {
+      return {
+        theta: parseField('theta', 55),
+        dT: parseField('dT', 50),
+        dG: parseField('dG', 150),
+        dA: parseField('dA', 325),
+        mArm: parseField('mArm', 2.3),
+        mSphere: parseField('mSphere', 3.6),
+        g: parseField('grav', 9.81),
+      };
+    }
+    // Shorthand: get just numeric vals from getInputs()
+    function getVals() {
+      const i = getInputs();
+      return {
+        theta: i.theta.val, dT: i.dT.val, dG: i.dG.val, dA: i.dA.val,
+        mArm: i.mArm.val, mSphere: i.mSphere.val, g: i.g.val
+      };
+    }
+
+    function isFullscreen() {
+      return document.querySelector('.canvas-panel')?.classList.contains('fullscreen');
+    }
+
+    function resizeCanvas() {
+      const rect = cvs.parentElement.getBoundingClientRect();
+      DPR = window.devicePixelRatio || 1;
+      CW = rect.width;
+      CH = isFullscreen() ? rect.height : Math.max(750, CW * 0.90);
+      cvs.width = CW * DPR; cvs.height = CH * DPR;
+      cvs.style.width = CW + 'px'; cvs.style.height = CH + 'px';
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(DPR, DPR);
+      drawDiagram();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    /* ────────────────────────────────────────────────
+       DRAW DIAGRAM
+    ──────────────────────────────────────────────── */
+    function drawDiagram() {
+      ctx.clearRect(0, 0, CW, CH);
+      const inp = getInputs();
+      const { theta, dT, dG, dA, mArm, mSphere, g } = getVals();
+      const a = 90 - theta; // forearm angle BELOW horizontal (35° when theta=55°)
+
+      /* Auto-scale so entire arm fits.
+         O is placed with:
+           top reserve  = 210px  (upper arm going up + T arrow)
+           bottom pad   = 90px   (weight arrows + dim line)
+           left pad     = Ox
+           right pad    = 140px  (labels to the right)
+      */
+      const fs = isFullscreen();
+      // In fullscreen, use generous padding so diagram doesn't stretch wall-to-wall
+      const padL = fs ? Math.max(CW * 0.22, 140) : Math.max(CW * 0.19, 100);
+      const padR = fs ? Math.max(CW * 0.22, 180) : 155;
+      const Ox = padL;
+      const availW = CW - Ox - padR;
+      const armDown = a >= 0;  // forearm below horizontal when theta < 90°
+      const padTop = fs ? Math.max(CH * 0.18, 220) : 200;
+      const padBot = fs ? Math.max(CH * 0.2, 200) : 185;
+      const Oy = armDown ? padTop : Math.min(CH - 180, CH * 0.55);
+      const availH = armDown ? (CH - Oy - padBot) : (Oy - 210);
+      const absA = Math.abs(a);
+
+      // dT: CONSTANT horizontal perp. distance from O to biceps tendon (doesn't change with angle).
+      // dG: ALONG-ARM distance (constant).
+      // dA: horizontal distance O to A (constant, user-specified).
+      const cosA = cos(a), sinA = sin(a);  // cosA = sin(θ), sinA = cos(θ)
+      const sinT = sin(theta);
+
+      // Fixed arm lengths
+      const armG = dG;           // along-arm (constant)
+      const armA = sinT > 1e-9 ? dA / sinT : dA;  // derive actual arm length from horizontal dist
+
+      // Current horizontal projections at this θ
+      const hT = dT;             // constant horizontal (perpendicular distance)
+      const hG = armG * sinT;    // = dG × sin(θ)
+      const hA = dA;             // dA is now direct horizontal distance
+
+      // Arm extents in horizontal and vertical directions
+      const horizExt = armA * Math.abs(cosA);
+      const vertExt  = armA * Math.abs(sinA);
+
+      let scale;
+      if (horizExt < 1) {
+        scale = availH / Math.max(vertExt, 1);
+      } else if (vertExt < 1) {
+        scale = availW / horizExt;
+      } else {
+        scale = Math.min(availW / horizExt, availH / vertExt);
+      }
+      if (fs) scale = Math.min(scale, 1.8);
+
+      // Key canvas points
+      const Ax = Ox + armA * cosA * scale;
+      const Ay = Oy + armA * sinA * scale;
+      const Gx = Ox + armG * cosA * scale;
+      const Gy = Oy + armG * sinA * scale;
+      // T point: on the UPPER ARM side, 50mm horizontally from O at elbow height
+      // This is the perpendicular distance from O to the biceps tendon line of action
+      const Bx = Ox + dT * scale;
+      const By = Oy;  // at elbow height
+
+      const armPx = Math.hypot(Ax - Ox, Ay - Oy);
+
+      /* Grid */
+      ctx.save();
+      ctx.strokeStyle = 'rgba(80,120,220,0.08)'; ctx.lineWidth = 0.5;
+      for (let x = 0; x < CW; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CH); ctx.stroke(); }
+      for (let y = 0; y < CH; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CW, y); ctx.stroke(); }
+      ctx.restore();
+
+      /* ── Upper arm ── */
+      drawUpperArm(Ox, Oy, 180, theta);
+
+      /* ── Forearm ── */
+      drawForearm(Ox, Oy, Ax, Ay, a, armPx);
+
+      /* ── Elbow joint (olecranon) ── */
+      const eGrad = ctx.createRadialGradient(Ox - 4, Oy - 2, 1, Ox, Oy, 16);
+      eGrad.addColorStop(0, '#d4a878'); eGrad.addColorStop(1, '#7a5038');
+      ctx.beginPath(); ctx.ellipse(Ox, Oy + 5, 15, 11, (theta) * DEG, 0, Math.PI * 2);
+      ctx.fillStyle = eGrad; ctx.fill();
+      // Pivot dot
+      ctx.beginPath(); ctx.arc(Ox, Oy, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#4a90d9'; ctx.fill();
+      ctx.strokeStyle = 'rgba(120,180,240,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+      /* ── Hand at A ── */
+      drawHand(Ax, Ay, a);
+
+      /* ── Sphere ── */
+      const sr = mentionedRadius(scale);
+      const sphX = Ax + cos(theta) * sr * 0.3 + sin(theta) * sr * 0.2;
+      const sphY = Ay + sin(theta) * sr * 0.3 - cos(theta) * sr * 0.2;
+      drawSphere(sphX, sphY, sr);
+
+      /* ── Force arrows ── */
+      const Wf = mArm * g, Ws = mSphere * g;
+      const arrowScale = 0.22;
+      const maxF = Math.max(Wf, Ws);
+      const aLen = 70;
+
+      // T — upward at biceps attachment (on upper arm, above O)
+      const tLen = 90;
+      drawArrow(ctx, Bx, By - 4, Bx, By - 4 - tLen, '#00e5ff', 3.5, 'T', 'left');
+
+      // Weight arrows
+      const signWf = mArm >= 0 ? 1 : -1;
+      const signWs = mSphere >= 0 ? 1 : -1;
+
+      drawArrow(ctx, Gx, Gy + 3 * signWf, Gx, Gy + 78 * signWf, '#ff2255', 3.2,
+        `${inp.mArm.sym}×${inp.g.sym} N`, 'right');
+
+      drawArrow(ctx, sphX, sphY + signWs * (sr + 3), sphX, sphY + signWs * (sr + 85), '#ff2255', 3.2,
+        `${inp.mSphere.sym}×${inp.g.sym} N`, 'right');
+
+      /* ── Angle arc ── */
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,80,220,0.55)'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(Ox, Oy); ctx.lineTo(Ox, Oy + 58); ctx.stroke();
+      ctx.setLineDash([]);
+      if (Math.abs(theta) > 0.5) {
+        ctx.beginPath(); ctx.arc(Ox, Oy, 46, a * DEG, Math.PI / 2); ctx.stroke();
+      }
+      ctx.restore();
+      ctx.font = 'bold 20px Inter,sans-serif'; ctx.fillStyle = '#ff50dc';
+      if (absA > 70) {
+        ctx.textAlign = 'left';
+        ctx.fillText(`${inp.theta.sym}°`, Ox + 26, Oy + 50);
+      } else {
+        ctx.fillText(`${inp.theta.sym}°`, Ox + 20, Oy + 56);
+      }
+
+      /* ── Key point dots ── */
+      [[Gx, Gy], [Bx, By]].forEach(([px, py]) => {
+        ctx.beginPath(); ctx.arc(px, py, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff'; ctx.fill();
+      });
+
+      /* ── Labels — adapt position based on arm angle ── */
+      lbl(ctx, Ox - 28, Oy - 12, 'O', '#ffffff');
+      if (absA > 60) {
+        lbl(ctx, Gx - 28, Gy + 6, 'G', '#ffffff');
+        lbl(ctx, Ax - 30, Ay + 6, 'A', '#ffffff');
+      } else {
+        lbl(ctx, Gx + 22, Gy - 26, 'G', '#ffffff');
+        lbl(ctx, Ax - 6, Ay - 32, 'A', '#ffffff');
+      }
+
+      /* ── Dimension: dT — horizontal distance O to T (constant) ── */
+      const dT_disp = Math.abs(Bx - Ox);
+      if (dT_disp > 12) {
+        dimLine(ctx, Ox, Oy - 58, Bx, Oy - 58, `${inp.dT.sym} mm`, '#39ff14');
+      }
+
+      /* ── Dimension: dG — along arm (constant, rotated label) ── */
+      const mgx = (Ox + Gx) / 2, mgy = (Oy + Gy) / 2;
+      ctx.save();
+      ctx.translate(mgx, mgy); ctx.rotate(a * DEG);
+      ctx.font = '17px DM Mono,monospace'; ctx.fillStyle = '#39ff14';
+      ctx.shadowColor = 'rgba(5,9,18,0.9)'; ctx.shadowBlur = 6;
+      ctx.textAlign = 'center'; ctx.fillText(`${inp.dG.sym} mm`, 0, -22);
+      ctx.restore();
+
+      /* ── Dimension: dA — horizontal dim line at bottom (user-specified) ── */
+      const dA_h_mm = Math.round(hA);
+      const dA_disp = Math.abs(Ax - Ox);
+      if (dA_disp > 12) {
+        const dimY = Math.max(Ay + sr * 2, sphY + sr + 88) + 30;
+        dimLine(ctx, Ox, dimY, Ax, dimY, `${dA_h_mm} mm`, '#39ff14');
+      }
+
+      /* ── Pin support ── */
+      drawPin(ctx, Ox, Oy + 14);
+
+      /* ── Legend ── */
+      drawLegend(ctx, CW - 170, 10);
+    }
+
+    /* returns sphere radius scaled to canvas */
+    function mentionedRadius(scale) {
+      return Math.max(18, Math.min(30, scale * 18));
+    }
+
+    /* ────────────────────────────────────────────────
+       REALISTIC UPPER ARM — large biceps encompassing T
+    ──────────────────────────────────────────────── */
+    function drawUpperArm(Ox, Oy, len, theta) {
+      ctx.save();
+
+      /* ── Main humerus body (bone/skin tube) ── */
+      const bg = ctx.createLinearGradient(Ox - 26, Oy, Ox + 26, Oy);
+      bg.addColorStop(0, '#4a2e18');
+      bg.addColorStop(0.15, '#7a5030');
+      bg.addColorStop(0.35, '#c09060');
+      bg.addColorStop(0.55, '#d4a878');
+      bg.addColorStop(0.75, '#c09060');
+      bg.addColorStop(0.90, '#7a5030');
+      bg.addColorStop(1, '#4a2e18');
+      ctx.fillStyle = bg;
+      ctx.beginPath();
+      ctx.moveTo(Ox - 16, Oy + 6);
+      ctx.bezierCurveTo(Ox - 26, Oy - len * 0.2, Ox - 30, Oy - len * 0.55, Ox - 20, Oy - len);
+      ctx.lineTo(Ox + 20, Oy - len);
+      ctx.bezierCurveTo(Ox + 30, Oy - len * 0.55, Ox + 26, Oy - len * 0.2, Ox + 16, Oy + 6);
+      ctx.closePath(); ctx.fill();
+
+      /* ── Skin subsurface scattering / ambient highlight ── */
+      const skinGlow = ctx.createLinearGradient(Ox - 20, Oy - len * 0.3, Ox + 10, Oy - len * 0.3);
+      skinGlow.addColorStop(0, 'rgba(230,190,140,0.15)');
+      skinGlow.addColorStop(0.5, 'rgba(240,210,170,0.12)');
+      skinGlow.addColorStop(1, 'rgba(190,130,80,0)');
+      ctx.fillStyle = skinGlow;
+      ctx.fillRect(Ox - 25, Oy - len * 0.85, 50, len * 0.75);
+
+      /* ── LARGE BICEPS MUSCLE BULGE — extends toward T point ── */
+      // The biceps belly is big enough to visually contain the T attachment at ~50mm right of O
+      const bicCx = Ox + 10;             // center slightly right (toward T)
+      const bicCy = Oy - len * 0.35;     // lower on the arm (closer to elbow)
+      const bicRx = 42;                  // wide horizontal radius (encompasses T)
+      const bicRy = len * 0.35;          // tall vertical radius
+
+      // Outer biceps glow
+      const bicOuter = ctx.createRadialGradient(bicCx - 4, bicCy, 5, bicCx, bicCy, bicRx);
+      bicOuter.addColorStop(0, 'rgba(215,155,95,0.75)');
+      bicOuter.addColorStop(0.5, 'rgba(185,120,65,0.45)');
+      bicOuter.addColorStop(0.8, 'rgba(140,85,40,0.2)');
+      bicOuter.addColorStop(1, 'rgba(100,55,25,0)');
+      ctx.fillStyle = bicOuter;
+      ctx.beginPath();
+      ctx.ellipse(bicCx, bicCy, bicRx, bicRy, -0.08, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner biceps peak (highlight)
+      const bicPeak = ctx.createRadialGradient(bicCx - 2, bicCy + 8, 2, bicCx, bicCy, 28);
+      bicPeak.addColorStop(0, 'rgba(230,180,120,0.65)');
+      bicPeak.addColorStop(0.6, 'rgba(200,140,85,0.3)');
+      bicPeak.addColorStop(1, 'rgba(160,100,50,0)');
+      ctx.fillStyle = bicPeak;
+      ctx.beginPath();
+      ctx.ellipse(bicCx - 2, bicCy + 5, 28, bicRy * 0.7, -0.05, 0, Math.PI * 2);
+      ctx.fill();
+
+      /* ── Muscle fibre texture lines (subtle) ── */
+      ctx.save();
+      ctx.globalAlpha = 0.12;
+      ctx.strokeStyle = '#c09060'; ctx.lineWidth = 0.8; ctx.lineCap = 'round';
+      for (let i = -2; i <= 2; i++) {
+        const ox = i * 6;
+        ctx.beginPath();
+        ctx.moveTo(bicCx + ox - 3, bicCy - bicRy * 0.6);
+        ctx.quadraticCurveTo(bicCx + ox + 4, bicCy, bicCx + ox - 2, bicCy + bicRy * 0.55);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      /* ── Biceps tendon — runs from belly down toward elbow ── */
+      ctx.save();
+      ctx.strokeStyle = 'rgba(210,165,115,0.5)';
+      ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(bicCx + 5, bicCy + bicRy * 0.55);
+      ctx.quadraticCurveTo(Ox + 12, Oy - 18, Ox + 6, Oy + 2);
+      ctx.stroke();
+      // Thinner tendon insertion
+      ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(200,155,100,0.35)';
+      ctx.beginPath();
+      ctx.moveTo(bicCx - 3, bicCy + bicRy * 0.5);
+      ctx.quadraticCurveTo(Ox + 4, Oy - 22, Ox, Oy + 2);
+      ctx.stroke();
+      ctx.restore();
+
+      /* ── Triceps (back of arm, slightly darker) ── */
+      const triCx = Ox - 10, triCy = Oy - len * 0.5;
+      const tri = ctx.createRadialGradient(triCx, triCy, 3, triCx, triCy, 24);
+      tri.addColorStop(0, 'rgba(160,100,60,0.55)');
+      tri.addColorStop(0.7, 'rgba(120,70,35,0.25)');
+      tri.addColorStop(1, 'rgba(80,45,20,0)');
+      ctx.fillStyle = tri;
+      ctx.beginPath();
+      ctx.ellipse(triCx, triCy, 18, len * 0.28, 0.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      /* ── Deltoid cap (shoulder area) ── */
+      const delCx = Ox, delCy = Oy - len + 15;
+      const del = ctx.createRadialGradient(delCx, delCy, 3, delCx, delCy, 28);
+      del.addColorStop(0, 'rgba(195,140,85,0.5)');
+      del.addColorStop(0.6, 'rgba(155,100,55,0.25)');
+      del.addColorStop(1, 'rgba(100,60,30,0)');
+      ctx.fillStyle = del;
+      ctx.beginPath();
+      ctx.ellipse(delCx, delCy, 26, 22, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      /* ── Skin highlight (edge light) ── */
+      ctx.strokeStyle = 'rgba(240,200,150,0.18)'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(Ox - 8, Oy - 12);
+      ctx.bezierCurveTo(Ox - 14, Oy - len * 0.3, Ox - 12, Oy - len * 0.65, Ox - 6, Oy - len + 15);
+      ctx.stroke();
+
+      /* ── Subtle arm outline ── */
+      ctx.strokeStyle = 'rgba(80,45,20,0.25)'; ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(Ox - 16, Oy + 4);
+      ctx.bezierCurveTo(Ox - 26, Oy - len * 0.2, Ox - 30, Oy - len * 0.55, Ox - 20, Oy - len);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(Ox + 16, Oy + 4);
+      ctx.bezierCurveTo(Ox + 26, Oy - len * 0.2, Ox + 30, Oy - len * 0.55, Ox + 20, Oy - len);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    /* ────────────────────────────────────────────────
+       REALISTIC FOREARM — enhanced anatomy
+    ──────────────────────────────────────────────── */
+    function drawForearm(Ox, Oy, Ax, Ay, theta, armPx) {
+      const nx = -sin(theta), ny = cos(theta);  // unit normal to arm
+      const w0 = 18, w1 = 8;                    // half-widths: elbow, wrist (wider)
+
+      ctx.save();
+
+      /* ── Body (main shape — tapered cylinder) ── */
+      const fg = ctx.createLinearGradient(Ox, Oy, Ax, Ay);
+      fg.addColorStop(0, '#6a4428');
+      fg.addColorStop(0.12, '#a07048');
+      fg.addColorStop(0.30, '#c49060');
+      fg.addColorStop(0.55, '#b88858');
+      fg.addColorStop(0.80, '#a07048');
+      fg.addColorStop(1, '#886040');
+      ctx.fillStyle = fg;
+      ctx.beginPath();
+      ctx.moveTo(Ox + nx * w0, Oy + ny * w0);
+      ctx.bezierCurveTo(
+        Ox + nx * (w0 + 4) + (Ax - Ox) * 0.30, Oy + ny * (w0 + 4) + (Ay - Oy) * 0.30,
+        Ax + nx * w1 - (Ax - Ox) * 0.10, Ay + ny * w1 - (Ay - Oy) * 0.10,
+        Ax + nx * w1, Ay + ny * w1
+      );
+      ctx.lineTo(Ax - nx * w1, Ay - ny * w1);
+      ctx.bezierCurveTo(
+        Ax - nx * w1 - (Ax - Ox) * 0.10, Ay - ny * w1 - (Ay - Oy) * 0.10,
+        Ox - nx * (w0 + 2) + (Ax - Ox) * 0.30, Oy - ny * (w0 + 2) + (Ay - Oy) * 0.30,
+        Ox - nx * w0, Oy - ny * w0
+      );
+      ctx.closePath(); ctx.fill();
+
+      /* ── Brachioradialis bulge (upper-lateral forearm near elbow) ── */
+      const brCx = Ox + nx * 8 + (Ax - Ox) * 0.20;
+      const brCy = Oy + ny * 8 + (Ay - Oy) * 0.20;
+      const br = ctx.createRadialGradient(brCx, brCy, 2, brCx, brCy, 20);
+      br.addColorStop(0, 'rgba(200,150,95,0.55)');
+      br.addColorStop(0.6, 'rgba(170,115,65,0.25)');
+      br.addColorStop(1, 'rgba(130,80,40,0)');
+      ctx.fillStyle = br;
+      ctx.beginPath();
+      ctx.ellipse(brCx, brCy, 16, armPx * 0.22, theta * DEG, 0, Math.PI * 2);
+      ctx.fill();
+
+      /* ── Flexor mass (inner forearm muscle) ── */
+      const flCx = Ox - nx * 5 + (Ax - Ox) * 0.25;
+      const flCy = Oy - ny * 5 + (Ay - Oy) * 0.25;
+      const fl = ctx.createRadialGradient(flCx, flCy, 2, flCx, flCy, 15);
+      fl.addColorStop(0, 'rgba(185,130,80,0.4)');
+      fl.addColorStop(1, 'rgba(120,75,35,0)');
+      ctx.fillStyle = fl;
+      ctx.beginPath();
+      ctx.ellipse(flCx, flCy, 12, armPx * 0.18, theta * DEG, 0, Math.PI * 2);
+      ctx.fill();
+
+      /* ── Radius/ulna bone highlight ── */
+      ctx.strokeStyle = 'rgba(220,180,130,0.18)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(Ox + nx * 6, Oy + ny * 6);
+      ctx.bezierCurveTo(
+        Ox + (Ax - Ox) * 0.4 + nx * 5, Oy + (Ay - Oy) * 0.4 + ny * 5,
+        Ax - (Ax - Ox) * 0.15 + nx * 3, Ay - (Ay - Oy) * 0.15 + ny * 3,
+        Ax + nx * 2, Ay + ny * 2
+      );
+      ctx.stroke();
+      // Second bone hint (ulna)
+      ctx.strokeStyle = 'rgba(200,160,110,0.12)'; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(Ox - nx * 5, Oy - ny * 5);
+      ctx.bezierCurveTo(
+        Ox + (Ax - Ox) * 0.4 - nx * 3, Oy + (Ay - Oy) * 0.4 - ny * 3,
+        Ax - (Ax - Ox) * 0.15 - nx * 1, Ay - (Ay - Oy) * 0.15 - ny * 1,
+        Ax - nx * 1, Ay - ny * 1
+      );
+      ctx.stroke();
+
+      /* ── Subtle outline ── */
+      ctx.strokeStyle = 'rgba(70,40,18,0.2)'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(Ox + nx * w0, Oy + ny * w0);
+      ctx.bezierCurveTo(
+        Ox + nx * (w0 + 4) + (Ax - Ox) * 0.30, Oy + ny * (w0 + 4) + (Ay - Oy) * 0.30,
+        Ax + nx * w1 - (Ax - Ox) * 0.10, Ay + ny * w1 - (Ay - Oy) * 0.10,
+        Ax + nx * w1, Ay + ny * w1
+      );
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(Ox - nx * w0, Oy - ny * w0);
+      ctx.bezierCurveTo(
+        Ox - nx * (w0 + 2) + (Ax - Ox) * 0.30, Oy - ny * (w0 + 2) + (Ay - Oy) * 0.30,
+        Ax - nx * w1 - (Ax - Ox) * 0.10, Ay - ny * w1 - (Ay - Oy) * 0.10,
+        Ax - nx * w1, Ay - ny * w1
+      );
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    /* ────────────────────────────────────────────────
+       HAND / FIST (simplified silhouette at A)
+    ──────────────────────────────────────────────── */
+    function drawHand(Ax, Ay, theta) {
+      ctx.save();
+      ctx.translate(Ax, Ay);
+      ctx.rotate(theta * DEG);
+
+      const hg = ctx.createLinearGradient(-4, -10, 22, 10);
+      hg.addColorStop(0, '#8a6040'); hg.addColorStop(0.5, '#c09060'); hg.addColorStop(1, '#7a5030');
+
+      /* Palm box */
+      ctx.fillStyle = hg;
+      ctx.beginPath();
+      ctx.roundRect(0, -9, 24, 18, 5);
+      ctx.fill();
+
+      /* Finger knuckle row */
+      for (let i = 0; i < 4; i++) {
+        const kx = 4 + i * 5;
+        // dark crease
+        ctx.fillStyle = 'rgba(60,30,10,0.5)';
+        ctx.beginPath(); ctx.arc(kx, -8, 3, 0, Math.PI * 2); ctx.fill();
+        // highlight
+        ctx.fillStyle = 'rgba(220,170,110,0.4)';
+        ctx.beginPath(); ctx.arc(kx - 0.5, -8.5, 1.5, 0, Math.PI * 2); ctx.fill();
+      }
+
+      /* Thumb (short nub above) */
+      ctx.fillStyle = '#a07848';
+      ctx.beginPath(); ctx.ellipse(1, -6, 5, 8, -0.5, 0, Math.PI * 2); ctx.fill();
+
+      /* Wrist tendon lines */
+      ctx.strokeStyle = 'rgba(100,60,20,0.35)'; ctx.lineWidth = 1;
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath(); ctx.moveTo(-1, -9 + i * 5); ctx.lineTo(-4, -9 + i * 5); ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    /* ────────────────────────────────────────────────
+       SPHERE
+    ──────────────────────────────────────────────── */
+    function drawSphere(cx, cy, r) {
+      const g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.35, r * 0.05, cx, cy, r);
+      g.addColorStop(0, '#b8d0dc'); g.addColorStop(0.45, '#607888');
+      g.addColorStop(0.8, '#304050'); g.addColorStop(1, '#0a1820');
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(150,200,220,0.35)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+      /* Specular spot */
+      const sg = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, 0, cx - r * 0.3, cy - r * 0.3, r * 0.55);
+      sg.addColorStop(0, 'rgba(255,255,255,0.55)');
+      sg.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = sg; ctx.fill();
+    }
+
+    /* ────────────────────────────────────────────────
+       ARROW (force vector)
+    ──────────────────────────────────────────────── */
+    function drawArrow(ctx, x1, y1, x2, y2, color, lw, label, labelSide) {
+      const dx = x2 - x1, dy = y2 - y1;
+      const len = Math.hypot(dx, dy);
+      const ux = dx / len, uy = dy / len;
+      const hL = 11, hW = 5.5;
+
+      ctx.save();
+      ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = lw; ctx.lineCap = 'round';
+
+      // Shaft
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2 - ux * hL, y2 - uy * hL);
+      ctx.stroke();
+
+      // Arrowhead
+      const px = -uy, py = ux;
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - ux * hL + px * hW, y2 - uy * hL + py * hW);
+      ctx.lineTo(x2 - ux * hL - px * hW, y2 - uy * hL - py * hW);
+      ctx.closePath(); ctx.fill();
+
+      // Label
+      if (label) {
+        const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+        ctx.font = '18px DM Mono,monospace';
+        ctx.fillStyle = color;
+        ctx.shadowColor = 'rgba(5,9,18,0.9)'; ctx.shadowBlur = 7;
+        ctx.textAlign = labelSide === 'right' ? 'left' : 'right';
+        ctx.fillText(label, mx + (labelSide === 'right' ? 22 : -22), my + 4);
+      }
+      ctx.restore();
+    }
+
+    /* ────────────────────────────────────────────────
+       LABEL / DIM-LINE / PIN / LEGEND helpers
+    ──────────────────────────────────────────────── */
+    function lbl(ctx, x, y, text, color) {
+      ctx.save();
+      ctx.font = 'bold 22px Inter,sans-serif';
+      ctx.fillStyle = color || '#c8a050';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = 'rgba(5,9,18,0.95)'; ctx.shadowBlur = 7;
+      ctx.fillText(text, x, y);
+      ctx.restore();
+    }
+
+    function dimLine(ctx, x1, y, x2, _y2, label, color) {
+      const ly = y;
+      ctx.save();
+      ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(x1, ly - 7); ctx.lineTo(x1, ly + 7); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x2, ly - 7); ctx.lineTo(x2, ly + 7); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(x1, ly); ctx.lineTo(x2, ly); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x1, ly); ctx.lineTo(x1 + 9, ly - 3.5); ctx.lineTo(x1 + 9, ly + 3.5); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x2, ly); ctx.lineTo(x2 - 9, ly - 3.5); ctx.lineTo(x2 - 9, ly + 3.5); ctx.closePath(); ctx.fill();
+      if (label) {
+        ctx.font = '17px DM Mono,monospace';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(5,9,18,0.9)'; ctx.shadowBlur = 5;
+        ctx.fillText(label, (x1 + x2) / 2, ly - 13);
+      }
+      ctx.restore();
+    }
+
+    /* ────────────────────────────────────────────────
+       PIN SUPPORT
+    ──────────────────────────────────────────────── */
+    function drawPin(ctx, x, y) {
+      ctx.save();
+      // Triangle
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - 14, y + 22);
+      ctx.lineTo(x + 14, y + 22);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(100,120,160,0.7)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(150,180,220,0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      // Ground hatch line
+      ctx.beginPath();
+      ctx.moveTo(x - 18, y + 23);
+      ctx.lineTo(x + 18, y + 23);
+      ctx.strokeStyle = 'rgba(150,180,220,0.5)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      for (let i = -14; i <= 14; i += 7) {
+        ctx.beginPath();
+        ctx.moveTo(x + i, y + 23);
+        ctx.lineTo(x + i - 5, y + 30);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    /* ────────────────────────────────────────────────
+       LEGEND
+    ──────────────────────────────────────────────── */
+    function drawLegend(ctx, x, y) {
+      const items = [
+        { color: '#00e5ff', label: 'Biceps tension T' },
+        { color: '#ff2255', label: 'Weight forces' },
+        { color: '#39ff14', label: 'Distances' },
+        { color: '#ff50dc', label: 'Elbow angle θ' },
+      ];
+      ctx.save();
+      // Semi-transparent background so legend is always readable
+      ctx.fillStyle = 'rgba(5,9,18,0.65)';
+      ctx.fillRect(x - 8, y - 4, 210, items.length * 26 + 10);
+      ctx.font = '16px DM Mono,monospace';
+      items.forEach((it, i) => {
+        const iy = y + i * 26;
+        ctx.fillStyle = it.color;
+        ctx.fillRect(x, iy, 14, 11);
+        ctx.fillStyle = 'rgba(240,234,216,0.95)';
+        ctx.textAlign = 'left';
+        ctx.fillText(it.label, x + 20, iy + 11);
+      });
+      ctx.restore();
+    }
+
+    /* ──────────────────────────────────────────────────
+       COMPUTE — called by the button
+    ────────────────────────────────────────────────── */
+    function compute() {
+      try {
+        const inp = getInputs();
+        const { theta, dT, dG, dA, mArm, mSphere, g } = getVals();
+        const anySymbol = !inp.theta.isNum || !inp.dT.isNum || !inp.dG.isNum ||
+          !inp.dA.isNum || !inp.mArm.isNum || !inp.mSphere.isNum || !inp.g.isNum;
+
+        // Computed quantities
+        const Wf   = mArm * g;                    // forearm weight (N)
+        const Ws   = mSphere * g;                 // sphere weight (N)
+        // dT: constant horiz. perp. distance (moment arm for T).
+        // dG and dA: along-arm constants.
+        const sinT = sin(theta);
+        const dT_h = dT / 1000;                   // dT is already horizontal (constant, m)
+        const dG_h = dG * sinT / 1000;            // dG along-arm → horiz. projection (m)
+        const dA_h = dA / 1000;                    // dA is already horizontal distance (m)
+        const M_Wf = -(Wf * dG_h);                // moment of forearm weight (Clockwise = Negative)
+        const M_Ws = -(Ws * dA_h);                // moment of sphere weight (Clockwise = Negative)
+        const M_tot = M_Wf + M_Ws;                // combined moment of weights (N·m)
+        const T    = dT_h > 1e-9 ? (-M_tot) / dT_h : 0; // required biceps tension (N)
+        const Tdir = T >= 0 ? 'Upward ↑' : 'Downward ↓';
+
+        // Short display symbols
+        const smA = inp.mArm.sym, smS = inp.mSphere.sym;
+        const sg  = inp.g.sym,    sθ  = inp.theta.sym;
+        const sdG = inp.dG.sym,   sdA = inp.dA.sym, sdT = inp.dT.sym;
+
+        function nr(condition, val, fmt) {
+          fmt = fmt || f3;
+          return condition ? '  =  ' + fmt(val) : '';
+        }
+        function dir(m) { return m < 0 ? 'Clockwise ↻' : 'Anti-clockwise ↺'; }
+
+        // Answer boxes — show formula when symbolic, numeric when all numbers
+        let mwText, tText;
+        if (!anySymbol) {
+          mwText = f2(Math.abs(M_tot)) + ' N·m';
+          tText = f1(T) + ' N';
+        } else {
+          // Build symbolic formula for combined moment
+          const symMomentArm = `${smA}×${sg}×sin(${sθ}°)×${sdG}`;
+          const symMomentSph = `${smS}×${sg}×sin(${sθ}°)×${sdA}`;
+          mwText = `(${symMomentArm} + ${symMomentSph})/1000 N·m`;
+          tText = `(${symMomentArm} + ${symMomentSph}) / ${sdT} N`;
+        }
+        // Update main answer boxes
+        document.getElementById('ans-mw').textContent = mwText;
+        document.getElementById('ans-mw-dir').textContent = `about O (${dir(M_tot)})`;
+        document.getElementById('ans-T').textContent = tText;
+        // Update fullscreen overlay
+        document.getElementById('fs-mw').textContent = mwText;
+        document.getElementById('fs-T').textContent = tText;
+
+        // Step-by-step working
+        const steps = [
+          {
+            n: 1,
+            b: `<span class="eq">Weight of the forearm</span>
+  = forearm mass × gravitational acceleration
+  = <span class="num">${smA} × ${sg}</span>${nr(inp.mArm.isNum && inp.g.isNum, Wf)} N
+
+<span class="eq">Weight of the sphere</span>
+  = sphere mass × gravitational acceleration
+  = <span class="num">${smS} × ${sg}</span>${nr(inp.mSphere.isNum && inp.g.isNum, Ws)} N`
+          },
+          {
+            n: 2,
+            b: `The elbow angle θ = ${sθ}° is measured from the upper arm (vertical) to the forearm.
+The forearm lies at  90° − ${sθ}° = ${inp.theta.isNum ? f1(90 - theta) + '°' : '(90−' + sθ + ')°'}  below horizontal.
+
+dT = ${sdT} mm is the constant horizontal perpendicular distance from O to the biceps tendon.
+dG = ${sdG} mm is the along-arm distance to the CG (constant).
+dA = ${sdA} mm is the horizontal distance from O to A (user-defined).
+
+Moment arm = horizontal projection of each distance:
+
+<span class="eq">Perp. dist. — biceps T</span>
+  = dT  =  <span class="num">${sdT} mm</span>  (constant)${inp.dT.isNum ? '  =  <span class="res">' + f3(dT_h) + ' m</span>' : ''}
+
+<span class="eq">Perp. dist. — forearm weight</span>
+  = dG × sin(θ)  =  ${sdG} × sin(${sθ}°)${nr(inp.dG.isNum && inp.theta.isNum, dG_h * 1000, f3)} mm${inp.dG.isNum && inp.theta.isNum ? '  =  <span class="res">' + f3(dG_h) + ' m</span>' : ''}
+
+<span class="eq">Perp. dist. — sphere weight</span>
+  = dA  =  <span class="num">${sdA} mm</span>  (constant)${inp.dA.isNum ? '  =  <span class="res">' + f3(dA_h) + ' m</span>' : ''}`
+          },
+          {
+            n: 3,
+            b: `<span class="eq">Moment of forearm weight about O</span>
+  = Wf × dG×sin(θ)  =  ${smA}×${sg} × ${sdG}×sin(${sθ}°) / 1000
+  ${nr(inp.mArm.isNum && inp.g.isNum && inp.dG.isNum && inp.theta.isNum, Math.abs(M_Wf), f3)} N·m  (${dir(M_Wf)})
+
+<span class="eq">Moment of sphere weight about O</span>
+  = Ws × dA  =  ${smS}×${sg} × ${sdA} / 1000
+  ${nr(inp.mSphere.isNum && inp.g.isNum && inp.dA.isNum, Math.abs(M_Ws), f3)} N·m  (${dir(M_Ws)})`
+          },
+          {
+            n: 4,
+            b: `<span class="eq">Combined moment of weights about O</span>
+  = M_Wf + M_Ws
+  = ( ${smA}×${sg}×${sdG}×sin(${sθ}°)/1000 ) + ( ${smS}×${sg}×${sdA}/1000 )` +
+              (!anySymbol ?
+                `
+  = ( ${f3(Math.abs(M_Wf))} ) + ( ${f3(Math.abs(M_Ws))} )
+  = <span class="res">${f2(Math.abs(M_tot))} N·m  (${dir(M_tot)})</span>` : '')
+          },
+          {
+            n: 5,
+            b: `For ΣM_O = 0, the biceps tension T must balance the combined moment of the weights.
+
+<span class="eq">M_T  =  M_combined</span>
+<span class="eq">T × dT  =  M_combined</span>
+  T × ( ${sdT}/1000 )  =  ${f2 && !anySymbol ? f2(Math.abs(M_tot)) : 'M_combined'}` +
+              (!anySymbol ?
+                `
+  T × ${f3(dT_h)}  =  ${f2(Math.abs(M_tot))}
+ 
+  <span class="eq">T</span>  =  ${f2(Math.abs(M_tot))} / ${f3(dT_h)}
+  <span class="eq">T</span>  =  <span class="res">${f1(T)} N  →  ${Tdir}</span>` : '')
+          }
+        ];
+
+        document.getElementById('stepsContainer').innerHTML =
+          steps.map(s =>
+            `<div class="step"><div class="step-n">${s.n}</div><div class="step-body">${s.b}</div></div>`
+          ).join('');
+        document.getElementById('resultPanel').style.display = 'block';
+        drawDiagram();
+      } catch (e) {
+        console.error('compute() error:', e);
+        drawDiagram();
+      }
+    }
+
+    /* Live redraw on every input change + angle validation + arm length sync */
+    function onInputChange(e) {
+      // 1. Angle validation
+      const warn = document.getElementById('angleWarn');
+      const thetaEl = document.getElementById('theta');
+      let v = parseFloat(thetaEl.value);
+      if (!isNaN(v) && v > 180) {
+        v = 180;
+        thetaEl.value = '180';
+        warn.classList.add('visible');
+      } else if (!isNaN(v) && v < 0) {
+        v = 0;
+        thetaEl.value = '0';
+        warn.classList.add('visible');
+      } else {
+        warn.classList.remove('visible');
+      }
+      
+      // 2. dG validation (Center of Mass cannot exceed arm length)
+      const dA_val = parseFloat(document.getElementById('dA').value);
+      const dGEl = document.getElementById('dG');
+      const dG_val = parseFloat(dGEl.value);
+      const dGWarn = document.getElementById('dGWarn');
+      
+      if (!isNaN(v) && !isNaN(dA_val) && !isNaN(dG_val)) {
+        const sinT = Math.sin(v * Math.PI / 180);
+        const armA = sinT > 1e-9 ? dA_val / sinT : dA_val;
+        if (dG_val > armA) {
+          const max_dG = Math.floor(armA);
+          dGEl.value = max_dG;
+          dGWarn.innerHTML = `⚠️ Center of mass (G) cannot exceed the total arm length. Clamped to maximum: <strong>${max_dG} mm</strong>.`;
+          dGWarn.classList.add('visible');
+        } else {
+          dGWarn.classList.remove('visible');
+        }
+      }
+      
+      // 3. Redraw
+      drawDiagram();
+    }
+    document.querySelectorAll('input').forEach(el => el.addEventListener('input', onInputChange));
+
+    /* On load: force-reset all fields to their numeric defaults then draw.
+       This overrides any browser session-restore that injects non-numeric cached values. */
+    const DEFAULTS = { theta:'55', dT:'50', dG:'150', dA:'325', mArm:'2.3', mSphere:'3.6', grav:'9.81' };
+    /* ── FULLSCREEN TOGGLE ── */
+    function toggleFullscreen() {
+      const panel = document.querySelector('.canvas-panel');
+      const btn = document.getElementById('btn-fs');
+      panel.classList.toggle('fullscreen');
+      const isFs = panel.classList.contains('fullscreen');
+      btn.textContent = isFs ? '✕' : '⤢';
+      btn.title = isFs ? 'Exit fullscreen' : 'Toggle fullscreen';
+      // Re-trigger canvas resize after transition
+      setTimeout(resizeCanvas, 50);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        const panel = document.querySelector('.canvas-panel');
+        if (panel.classList.contains('fullscreen')) toggleFullscreen();
+      }
+    });
+
+    window.addEventListener('load', () => {
+      Object.entries(DEFAULTS).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el && (isNaN(parseFloat(el.value)) || el.value.trim() === '')) el.value = val;
+      });
+      resizeCanvas();
+      onInputChange();
+    });
+  </script>
+</body>
+
+</html>

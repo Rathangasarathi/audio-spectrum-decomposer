@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>StaticsSolver — Meriam &amp; Kraige Interactive Hub</title>
+  <meta name="description" content="Interactive hub for Meriam &amp; Kraige Engineering Mechanics: Statics problem solvers." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0d10;
+      --surface: #16161e;
+      --surface2: #1e1e28;
+      --border: rgba(255,255,255,0.07);
+      --gold: #c8a050;
+      --gold-glow: rgba(200,160,80,0.15);
+      --blue: #4a90d9;
+      --green: #4dc87a;
+      --red: #e06060;
+      --cyan: #00e5ff;
+      --text: #f0ead8;
+      --muted: #7a7468;
+      --dim: #2a2a35;
+      --radius: 16px;
+      --tr: 0.25s ease;
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0 }
+    html,body { min-height:100%; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; line-height:1.6 }
+    ::-webkit-scrollbar { width:5px }
+    ::-webkit-scrollbar-thumb { background:var(--dim); border-radius:3px }
+
+    /* ── TOPBAR ── */
+    .topbar { display:flex; align-items:center; gap:14px; padding:18px 32px; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(13,13,16,0.95); backdrop-filter:blur(16px); z-index:50 }
+    .brand { display:flex; align-items:center; gap:10px }
+    .brand-icon { width:36px; height:36px; background:var(--gold); color:var(--bg); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700; box-shadow:0 0 24px rgba(200,160,80,0.3) }
+    .brand-name { font-size:19px; font-weight:700; color:var(--gold); letter-spacing:-0.02em }
+    .brand-sub { font-size:11px; color:var(--muted); margin-left:auto; font-style:italic }
+
+    /* ── HERO ── */
+    .hero-section { text-align:center; padding:80px 24px 60px; position:relative; overflow:hidden }
+    .hero-section::before {
+      content:'';
+      position:absolute; top:0; left:50%; transform:translateX(-50%);
+      width:600px; height:300px;
+      background:radial-gradient(ellipse at center top, rgba(200,160,80,0.1), transparent 70%);
+      pointer-events:none;
+    }
+    .hero-badge { display:inline-block; font-size:10px; font-weight:600; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); background:var(--gold-glow); border:1px solid rgba(200,160,80,0.25); border-radius:20px; padding:5px 16px; margin-bottom:22px }
+    .hero-section h1 { font-size:clamp(2rem,5vw,3.4rem); font-weight:700; letter-spacing:-0.03em; line-height:1.15; margin-bottom:16px }
+    .hero-section h1 em { color:var(--gold); font-style:normal }
+    .hero-section p { color:var(--muted); font-size:15px; max-width:580px; margin:0 auto 48px; line-height:1.75 }
+
+    /* Stats row */
+    .stats-row { display:flex; justify-content:center; gap:40px; margin-bottom:60px; flex-wrap:wrap }
+    .stat { text-align:center }
+    .stat-num { font-size:28px; font-weight:700; color:var(--gold); font-family:'DM Mono',monospace; line-height:1 }
+    .stat-lbl { font-size:11px; color:var(--muted); margin-top:4px; letter-spacing:0.08em }
+
+    /* ── CARDS GRID ── */
+    .cards-wrap { max-width:960px; margin:0 auto; padding:0 24px 80px }
+    .section-hdr { font-size:10px; font-weight:600; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:24px; display:flex; align-items:center; gap:14px }
+    .section-hdr::after { content:''; flex:1; height:1px; background:var(--border) }
+
+    .cards-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(380px,1fr)); gap:20px }
+    @media(max-width:480px){ .cards-grid { grid-template-columns:1fr } }
+
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px 28px 24px; text-decoration:none; color:inherit; display:flex; flex-direction:column; gap:16px; transition:all var(--tr); position:relative; overflow:hidden; cursor:pointer }
+    .card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, transparent, var(--card-accent, var(--gold)) 50%, transparent); opacity:0; transition:opacity var(--tr) }
+    .card:hover { border-color:rgba(255,255,255,0.14); transform:translateY(-3px); box-shadow:0 12px 40px rgba(0,0,0,0.4); background:var(--surface2) }
+    .card:hover::before { opacity:1 }
+    .card:active { transform:translateY(-1px) }
+
+    .card-tag { display:flex; align-items:center; gap:10px }
+    .card-num { font-size:11px; font-weight:700; letter-spacing:0.18em; font-family:'DM Mono',monospace; color:var(--card-accent, var(--gold)); background:rgba(200,160,80,0.1); border:1px solid rgba(200,160,80,0.2); border-radius:6px; padding:3px 10px }
+    .card-chapter { font-size:10px; color:var(--muted); letter-spacing:0.1em }
+    .card-icon { font-size:36px; line-height:1; opacity:0.9; margin-bottom:4px }
+    .card h2 { font-size:18px; font-weight:600; letter-spacing:-0.01em; line-height:1.3 }
+    .card h2 em { color:var(--card-accent, var(--gold)); font-style:normal }
+    .card .desc { font-size:13px; color:var(--muted); line-height:1.7; flex:1 }
+    .card .desc strong { color:var(--text) }
+
+    .card-facts { display:flex; gap:12px; flex-wrap:wrap }
+    .fact { font-size:10px; font-family:'DM Mono',monospace; color:var(--muted); background:var(--dim); border-radius:4px; padding:3px 9px; letter-spacing:0.05em }
+
+    .card-cta { display:flex; align-items:center; justify-content:space-between; margin-top:4px }
+    .cta-label { font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--card-accent, var(--gold)) }
+    .cta-arrow { font-size:18px; color:var(--card-accent, var(--gold)); transition:transform var(--tr) }
+    .card:hover .cta-arrow { transform:translateX(5px) }
+
+    /* color variants */
+    .card.blue { --card-accent: var(--blue) }
+    .card.blue .card-num { color:var(--blue); background:rgba(74,144,217,0.1); border-color:rgba(74,144,217,0.2) }
+    .card.green { --card-accent: var(--green) }
+    .card.green .card-num { color:var(--green); background:rgba(77,200,122,0.1); border-color:rgba(77,200,122,0.2) }
+    .card.purple { --card-accent: #a78bfa }
+    .card.purple .card-num { color:#a78bfa; background:rgba(167,139,250,0.1); border-color:rgba(167,139,250,0.2) }
+
+    /* Coming-soon */
+    .card.soon { opacity:0.45; pointer-events:none; cursor:not-allowed }
+    .card.soon::after { content:'Coming Soon'; position:absolute; top:14px; right:14px; font-size:9px; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); background:var(--dim); border-radius:4px; padding:3px 8px }
+
+    /* Footer */
+    footer { text-align:center; padding:32px 24px; border-top:1px solid var(--border); color:var(--muted); font-size:12px }
+    footer strong { color:var(--gold) }
+
+    /* Ambient particles (pure CSS) */
+    @keyframes floatUp { from{opacity:0;transform:translateY(30px)} to{opacity:0.6;transform:translateY(-120px)} }
+    .particle { position:fixed; bottom:0; width:2px; height:2px; border-radius:50%; background:var(--gold); opacity:0; animation:floatUp linear infinite; pointer-events:none }
+    .p1{left:15%;animation-duration:9s;animation-delay:0s}
+    .p2{left:35%;animation-duration:12s;animation-delay:3s}
+    .p3{left:55%;animation-duration:8s;animation-delay:6s}
+    .p4{left:75%;animation-duration:11s;animation-delay:1.5s}
+    .p5{left:90%;animation-duration:14s;animation-delay:4s}
+  </style>
+</head>
+<body>
+
+  <!-- Ambient particles -->
+  <div class="particle p1"></div>
+  <div class="particle p2"></div>
+  <div class="particle p3"></div>
+  <div class="particle p4"></div>
+  <div class="particle p5"></div>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon">Σ</div>
+      <div class="brand-name">StaticsSolver</div>
+    </div>
+    <div class="brand-sub">Meriam &amp; Kraige — Engineering Mechanics: Statics</div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero-section">
+    <div class="hero-badge">Interactive Problem Solver</div>
+    <h1>Engineering <em>Statics</em><br/>Problem Hub</h1>
+    <p>An interactive solver for problems from <strong>Meriam &amp; Kraige — Engineering Mechanics: Statics</strong>.
+      Input your own values, watch the live diagram update, and explore step-by-step solutions.</p>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-num">4</div><div class="stat-lbl">Problems Solved</div></div>
+      <div class="stat"><div class="stat-num">∞</div><div class="stat-lbl">Parametric Inputs</div></div>
+      <div class="stat"><div class="stat-num">⤢</div><div class="stat-lbl">Fullscreen Mode</div></div>
+    </div>
+  </div>
+
+  <!-- CARDS -->
+  <div class="cards-wrap">
+    <div class="section-hdr">Available Solvers</div>
+    <div class="cards-grid">
+
+      <!-- Problem 2/50 -->
+      <a class="card" href="problem_2_50.html">
+        <div class="card-tag">
+          <span class="card-num">2/50</span>
+          <span class="card-chapter">Chapter 2 · Moments &amp; Couples</span>
+        </div>
+        <div class="card-icon">💪</div>
+        <h2>Forearm <em>Moment Analysis</em></h2>
+        <p class="desc">
+          Determine the combined moment of weights about elbow pivot <strong>O</strong> and the required
+          biceps tension <strong>T</strong> for equilibrium. Includes a realistic anatomical arm diagram
+          with biceps tendon, forearm bone, and sphere.
+        </p>
+        <div class="card-facts">
+          <span class="fact">ΣM_O = 0</span>
+          <span class="fact">Biceps Tension T</span>
+          <span class="fact">Elbow angle θ</span>
+          <span class="fact">Live diagram</span>
+        </div>
+        <div class="card-cta">
+          <span class="cta-label">Open Solver</span>
+          <span class="cta-arrow">→</span>
+        </div>
+      </a>
+
+      <!-- Problem 4/22 -->
+      <a class="card blue" href="problem_4_22.html">
+        <div class="card-tag">
+          <span class="card-num">4/22</span>
+          <span class="card-chapter">Chapter 4 · Structures · Trusses</span>
+        </div>
+        <div class="card-icon">🏗️</div>
+        <h2>Loaded Truss — <em>Method of Joints</em></h2>
+        <p class="desc">
+          Determine forces in members <strong>AB</strong>, <strong>CG</strong>, and <strong>DE</strong>
+          of the loaded truss. Uses global equilibrium to find reactions, then analyses joints A, C, and E
+          using method of joints with 45° geometry.
+        </p>
+        <div class="card-facts">
+          <span class="fact">Method of Joints</span>
+          <span class="fact">AB · CG · DE</span>
+          <span class="fact">45° roller at E</span>
+          <span class="fact">Live diagram</span>
+        </div>
+        <div class="card-cta">
+          <span class="cta-label">Open Solver</span>
+          <span class="cta-arrow">→</span>
+        </div>
+      </a>
+
+      <!-- Problem 5/129 -->
+      <a class="card green" href="problem_5_129.html">
+        <div class="card-tag">
+          <span class="card-num">5/129</span>
+          <span class="card-chapter">Chapter 5 · Beams</span>
+        </div>
+        <div class="card-icon">➖</div>
+        <h2>Beam SFD &amp; BMD <em>Analysis</em></h2>
+        <p class="desc">
+          Draw the shear and moment diagrams for the loaded beam. Determine the values of shear force 
+          and bending moment at the middle of the beam.
+        </p>
+        <div class="card-facts">
+          <span class="fact">SFD & BMD</span>
+          <span class="fact">Point Load P</span>
+          <span class="fact">Couple M₀</span>
+          <span class="fact">Live diagram</span>
+        </div>
+        <div class="card-cta">
+          <span class="cta-label">Open Solver</span>
+          <span class="cta-arrow">→</span>
+        </div>
+      </a>
+
+      <!-- Problem A/16 -->
+      <a class="card purple" href="problem_a_16.html">
+        <div class="card-tag">
+          <span class="card-num">A/16</span>
+          <span class="card-chapter">Appendix A · Area Moments of Inertia</span>
+        </div>
+        <div class="card-icon">📐</div>
+        <h2>Area Moment of Inertia <em>Solver</em></h2>
+        <p class="desc">
+          Determine the <strong>polar radius of gyration</strong> about a polar axis passing through the midpoint <strong>A</strong> of the hypotenuse of the right-triangular area.
+        </p>
+        <div class="card-facts">
+          <span class="fact">Polar Axis</span>
+          <span class="fact">Midpoint A</span>
+          <span class="fact">Live diagram</span>
+        </div>
+        <div class="card-cta">
+          <span class="cta-label">Open Solver</span>
+          <span class="cta-arrow">→</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <footer>
+    Built with ❤️ for <strong>Engineering Mechanics: Statics</strong> — Meriam &amp; Kraige
+  </footer>
+
+</body>
+</html>

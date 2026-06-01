@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>PhoneCam – Sender</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #1a1a26;
+      --border: rgba(255,255,255,0.08);
+      --accent: #6c63ff;
+      --accent2: #00d4ff;
+      --text: #f0f0ff;
+      --muted: #8888aa;
+      --success: #00e5a0;
+      --danger: #ff5252;
+      --warning: #ffb347;
+      --glow: 0 0 40px rgba(108,99,255,0.35);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 100% 50% at 30% 0%, rgba(108,99,255,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 80% 60% at 80% 100%, rgba(0,212,255,0.1) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .screen {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: env(safe-area-inset-top, 20px) 20px env(safe-area-inset-bottom, 20px) 20px;
+      padding-top: max(env(safe-area-inset-top), 20px);
+      padding-bottom: max(env(safe-area-inset-bottom), 20px);
+    }
+
+    /* ── Logo ── */
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+      padding-top: 6px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 4px 16px rgba(108,99,255,0.4);
+    }
+
+    .logo-text h1 { font-size: 16px; font-weight: 700; }
+    .logo-text p { font-size: 11px; color: var(--muted); }
+
+    /* ── Main content (scrollable) ── */
+    .content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .content::-webkit-scrollbar { display: none; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+    }
+
+    .card-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    /* ── Preview ── */
+    .preview-wrap {
+      background: #000;
+      border-radius: 14px;
+      overflow: hidden;
+      aspect-ratio: 9/16;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-height: 200px;
+    }
+
+    #local-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    #local-video.active { display: block; }
+
+    .preview-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .preview-placeholder span { font-size: 28px; }
+
+    /* ── Code Input ── */
+    .code-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .code-input-label {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .code-input-row {
+      display: flex;
+      gap: 4px;
+    }
+
+    .digit-box {
+      flex: 1;
+      height: 60px;
+      border-radius: 12px;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      font-size: 28px;
+      font-weight: 800;
+      text-align: center;
+      font-family: 'Inter', monospace;
+      transition: all 0.2s;
+      caret-color: var(--accent);
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .digit-box:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.2);
+      background: rgba(108,99,255,0.08);
+    }
+
+    /* ── Secret: single hidden input for the 4 digits ── */
+    #hidden-code-input {
+      position: absolute;
+      opacity: 0;
+      left: -9999px;
+    }
+
+    /* ── Buttons ── */
+    .btn-connect {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+      box-shadow: 0 4px 24px rgba(108,99,255,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: 0.3px;
+    }
+
+    .btn-connect:active { transform: scale(0.97); opacity: 0.9; }
+    .btn-connect:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 13px;
+      border-radius: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-secondary:active { opacity: 0.7; }
+
+    /* ── Status section ── */
+    .status-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .big-status-icon {
+      font-size: 42px;
+      animation: none;
+    }
+
+    .big-status-icon.spin { animation: spin 2s linear infinite; }
+    .big-status-icon.pulse { animation: bigpulse 2s ease-in-out infinite; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes bigpulse {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+
+    .status-title { font-size: 17px; font-weight: 700; }
+    .status-sub { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    .live-indicator {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(0,229,160,0.12);
+      border: 1px solid rgba(0,229,160,0.3);
+      color: var(--success);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse-dot 1.5s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── Camera selector ── */
+    .cam-toggle {
+      display: flex;
+      gap: 8px;
+    }
+
+    .cam-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .cam-btn.active {
+      background: rgba(108,99,255,0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Pages */
+    .page { display: none; flex-direction: column; height: 100%; }
+    .page.active { display: flex; }
+
+    /* Toast */
+    #phone-toast {
+      position: fixed;
+      bottom: calc(env(safe-area-inset-bottom) + 20px);
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      z-index: 200;
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      backdrop-filter: blur(20px);
+      white-space: nowrap;
+    }
+
+    #phone-toast.show { transform: translateX(-50%) translateY(0); }
+    #phone-toast.success { color: var(--success); border-color: rgba(0,229,160,0.4); }
+    #phone-toast.error { color: var(--danger); border-color: rgba(255,82,82,0.4); }
+  </style>
+</head>
+<body>
+
+<!-- ── Setup Page ── -->
+<div class="page active" id="setup-page">
+  <div class="screen">
+    <!-- Logo -->
+    <div class="logo-row">
+      <div class="logo-icon">📱</div>
+      <div class="logo-text">
+        <h1>PhoneCam</h1>
+        <p>Camera Sender</p>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Preview -->
+      <div class="card">
+        <div class="card-label">Camera Preview</div>
+        <div class="preview-wrap" id="preview-wrap" onclick="startPreview()">
+          <video id="local-video" autoplay playsinline muted></video>
+          <div class="preview-placeholder" id="preview-ph">
+            <span>🎥</span>
+            <p>Tap to preview camera</p>
+          </div>
+        </div>
+
+        <div class="cam-toggle" style="margin-top:12px;">
+          <button class="cam-btn active" id="cam-rear" onclick="switchCamera('environment')">🔲 Rear</button>
+          <button class="cam-btn" id="cam-front" onclick="switchCamera('user')">🤳 Front</button>
+        </div>
+      </div>
+
+      <!-- Code Entry -->
+      <div class="card">
+        <div class="card-label">Enter Session Code</div>
+        <div class="code-input-group">
+          <div class="code-input-label">Enter the 4-digit code shown on your laptop</div>
+          <div class="code-input-row" id="digit-row">
+            <input class="digit-box" id="d0" type="number" inputmode="numeric" maxlength="1" pattern="[0-9]" min="0" max="9" />
+            <input class="digit-box" id="d1" type="number" inputmode="numeric" maxlength="1" pattern="[0-9]" min="0" max="9" />
+            <input class="digit-box" id="d2" type="number" inputmode="numeric" maxlength="1" pattern="[0-9]" min="0" max="9" />
+            <input class="digit-box" id="d3" type="number" inputmode="numeric" maxlength="1" pattern="[0-9]" min="0" max="9" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Connect button -->
+      <button class="btn-connect" id="connect-btn" onclick="connectToLaptop()">
+        📡 Connect to Laptop
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Streaming Page ── -->
+<div class="page" id="stream-page">
+  <div class="screen">
+    <div class="logo-row">
+      <div class="logo-icon">📱</div>
+      <div class="logo-text">
+        <h1>PhoneCam</h1>
+        <p>Camera Sender</p>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Status card -->
+      <div class="status-card" id="status-card">
+        <div class="big-status-icon spin" id="big-icon">🔄</div>
+        <div class="status-title" id="status-title">Connecting…</div>
+        <div class="status-sub" id="status-sub">Establishing secure peer connection</div>
+      </div>
+
+      <!-- Live preview small -->
+      <div class="card">
+        <div class="card-label">Your Camera (Preview)</div>
+        <div class="preview-wrap" style="max-height:160px;">
+          <video id="stream-preview" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;border-radius:14px;"></video>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="card">
+        <div class="card-label">Controls</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="cam-toggle">
+            <button class="cam-btn active" id="s-cam-rear" onclick="switchStreamCamera('environment')">🔲 Rear</button>
+            <button class="cam-btn" id="s-cam-front" onclick="switchStreamCamera('user')">🤳 Front</button>
+          </div>
+          <button class="btn-secondary" onclick="stopStream()">✕ Stop Streaming</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="phone-toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+let localStream = null;
+let peer = null;
+let activeCall = null;
+let currentFacing = 'environment'; // rear
+let isStreaming = false;
+
+// ─────────────────────────────────────────────
+// Pre-fill code from URL param
+// ─────────────────────────────────────────────
+(function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const code = urlParams.get('code');
+  if (code && /^\d{4}$/.test(code)) {
+    document.getElementById('d0').value = code[0];
+    document.getElementById('d1').value = code[1];
+    document.getElementById('d2').value = code[2];
+    document.getElementById('d3').value = code[3];
+  }
+})();
+
+// ─────────────────────────────────────────────
+// Digit box navigation
+// ─────────────────────────────────────────────
+document.querySelectorAll('.digit-box').forEach((el, idx, all) => {
+  el.addEventListener('input', (e) => {
+    // Keep only last digit
+    const val = e.target.value.replace(/\D/g,'');
+    e.target.value = val ? val[val.length-1] : '';
+    if (val && idx < all.length - 1) all[idx+1].focus();
+  });
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && !el.value && idx > 0) all[idx-1].focus();
+  });
+  el.addEventListener('focus', () => el.select());
+});
+
+// ─────────────────────────────────────────────
+// Camera
+// ─────────────────────────────────────────────
+async function getCamera(facing) {
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); }
+  const constraints = {
+    video: {
+      facingMode: { ideal: facing },
+      width: { ideal: 1920 },
+      height: { ideal: 1080 },
+      frameRate: { ideal: 30 }
+    },
+    audio: false
+  };
+  localStream = await navigator.mediaDevices.getUserMedia(constraints);
+  currentFacing = facing;
+  return localStream;
+}
+
+async function startPreview() {
+  try {
+    const stream = await getCamera(currentFacing);
+    const vid = document.getElementById('local-video');
+    vid.srcObject = stream;
+    vid.classList.add('active');
+    document.getElementById('preview-ph').style.display = 'none';
+  } catch(e) {
+    showPhoneToast('Camera permission denied', 'error');
+  }
+}
+
+async function switchCamera(facing) {
+  document.getElementById('cam-rear').classList.toggle('active', facing === 'environment');
+  document.getElementById('cam-front').classList.toggle('active', facing === 'user');
+  try {
+    const stream = await getCamera(facing);
+    const vid = document.getElementById('local-video');
+    vid.srcObject = stream;
+    vid.classList.add('active');
+    document.getElementById('preview-ph').style.display = 'none';
+  } catch(e) {
+    showPhoneToast('Could not switch camera', 'error');
+  }
+}
+
+async function switchStreamCamera(facing) {
+  document.getElementById('s-cam-rear').classList.toggle('active', facing === 'environment');
+  document.getElementById('s-cam-front').classList.toggle('active', facing === 'user');
+  try {
+    const newStream = await getCamera(facing);
+    document.getElementById('stream-preview').srcObject = newStream;
+
+    if (activeCall && activeCall.peerConnection) {
+      const sender = activeCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+      if (sender) {
+        await sender.replaceTrack(newStream.getVideoTracks()[0]);
+        showPhoneToast('Camera switched!', 'success');
+      }
+    }
+  } catch(e) {
+    showPhoneToast('Could not switch camera', 'error');
+  }
+}
+
+// ─────────────────────────────────────────────
+// Connect
+// ─────────────────────────────────────────────
+async function connectToLaptop() {
+  const digits = ['d0','d1','d2','d3'].map(id => document.getElementById(id).value.trim());
+  if (digits.some(d => d === '' || isNaN(d))) {
+    showPhoneToast('Please enter all 4 digits', 'error');
+    return;
+  }
+  const code = digits.join('');
+  const laptopPeerId = 'phonecam-laptop-' + code;
+
+  document.getElementById('connect-btn').disabled = true;
+  document.getElementById('connect-btn').textContent = 'Connecting…';
+
+  // Get camera stream first
+  try {
+    const stream = await getCamera(currentFacing);
+    // Show streaming page
+    document.getElementById('setup-page').classList.remove('active');
+    document.getElementById('stream-page').classList.add('active');
+    document.getElementById('stream-preview').srcObject = stream;
+    isStreaming = true;
+
+    // Set status
+    setStreamStatus('🔄', 'spin', 'Connecting…', 'Reaching laptop peer');
+
+    // Init PeerJS
+    const myId = 'phonecam-phone-' + Date.now();
+    peer = new Peer(myId, {
+      host: '0.peerjs.com',
+      port: 443,
+      path: '/',
+      secure: true,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          {
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+          }
+        ]
+      }
+    });
+
+    peer.on('open', () => {
+      setStreamStatus('📡', 'spin', 'Calling Laptop…', 'Initiating video stream');
+
+      const call = peer.call(laptopPeerId, stream, {
+        sdpTransform: (sdp) => {
+          // Prefer high bitrate VP8/H264
+          return sdp.replace('b=AS:30', 'b=AS:2000');
+        }
+      });
+      activeCall = call;
+
+      call.on('stream', () => {
+        // Laptop answered (even with no stream)
+        setStreamStatus('✅', 'pulse', 'Streaming Live!', 'Your camera is on the laptop screen');
+        setLiveIndicator(true);
+        showPhoneToast('🎉 Connected! Camera is live on laptop.', 'success');
+      });
+
+      call.on('close', () => onCallEnded());
+      call.on('error', () => {
+        setStreamStatus('❌', '', 'Connection Failed', 'Could not reach laptop. Check code and WiFi.');
+        showPhoneToast('Connection failed', 'error');
+      });
+    });
+
+    peer.on('error', (err) => {
+      if (err.type === 'peer-unavailable') {
+        setStreamStatus('❌', '', 'Laptop Not Found', 'Make sure the laptop page is open with the same code.');
+        showPhoneToast('Laptop not found – check the code', 'error');
+      } else {
+        setStreamStatus('❌', '', 'Error', err.message || 'Unknown error');
+      }
+    });
+
+  } catch(e) {
+    document.getElementById('connect-btn').disabled = false;
+    document.getElementById('connect-btn').innerHTML = '📡 Connect to Laptop';
+    showPhoneToast('Camera access denied', 'error');
+  }
+}
+
+function setStreamStatus(icon, anim, title, sub) {
+  const el = document.getElementById('big-icon');
+  el.textContent = icon;
+  el.className = 'big-status-icon ' + anim;
+  document.getElementById('status-title').textContent = title;
+  document.getElementById('status-sub').textContent = sub;
+}
+
+function setLiveIndicator(on) {
+  const card = document.getElementById('status-card');
+  // remove old indicator if any
+  const old = card.querySelector('.live-indicator');
+  if (old) old.remove();
+  if (on) {
+    const div = document.createElement('div');
+    div.className = 'live-indicator';
+    div.innerHTML = '<div class="live-dot"></div> LIVE';
+    card.appendChild(div);
+  }
+}
+
+function onCallEnded() {
+  isStreaming = false;
+  setStreamStatus('🔌', '', 'Disconnected', 'The stream ended.');
+  setLiveIndicator(false);
+  // go back to setup
+  setTimeout(() => {
+    document.getElementById('stream-page').classList.remove('active');
+    document.getElementById('setup-page').classList.add('active');
+    document.getElementById('connect-btn').disabled = false;
+    document.getElementById('connect-btn').innerHTML = '📡 Connect to Laptop';
+  }, 2000);
+}
+
+function stopStream() {
+  if (activeCall) { activeCall.close(); activeCall = null; }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  if (peer) { peer.destroy(); peer = null; }
+  onCallEnded();
+}
+
+// ─────────────────────────────────────────────
+// Toast
+// ─────────────────────────────────────────────
+let toastTimer;
+function showPhoneToast(msg, type = '') {
+  const t = document.getElementById('phone-toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = type; }, 3000);
+}
+
+// Auto-start preview on page load
+window.addEventListener('load', () => {
+  // Small nudge to user
+  setTimeout(() => {
+    showPhoneToast('Tap the preview area to start camera');
+  }, 700);
+});
+</script>
+
+</body>
+</html>

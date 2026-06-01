@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Meriam &amp; Kraige 4/22 — Truss Member Force Solver</title>
+  <meta name="description" content="Interactive solver for Meriam &amp; Kraige Problem 4/22 – method of joints for truss members AB, CG, DE." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131c;
+      --surface2: #1a1a27;
+      --surface3: #20202e;
+      --border: rgba(255,255,255,0.07);
+      --border-glow: rgba(138,99,210,0.35);
+      --gold: #e0b060;
+      --gold2: #f5c842;
+      --gold-glow: rgba(224,176,96,0.12);
+      --blue: #5ba3f5;
+      --blue-glow: rgba(91,163,245,0.15);
+      --green: #3de88a;
+      --green-glow: rgba(61,232,138,0.15);
+      --red: #ff5f7e;
+      --cyan: #00e5ff;
+      --cyan-glow: rgba(0,229,255,0.15);
+      --purple: #a78bfa;
+      --purple-glow: rgba(167,139,250,0.15);
+      --text: #eee8d8;
+      --muted: #6e6860;
+      --dim: #252535;
+      --radius: 16px;
+      --tr: 0.22s cubic-bezier(0.4,0,0.2,1);
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0 }
+    html,body { min-height:100%; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; font-size:14px; line-height:1.6 }
+    ::-webkit-scrollbar { width:5px }
+    ::-webkit-scrollbar-thumb { background:var(--dim); border-radius:3px }
+
+    .topbar { display:flex; align-items:center; gap:14px; padding:16px 20px; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(10,10,15,0.94); backdrop-filter:blur(16px); z-index:50 }
+    .brand { display:flex; align-items:center; gap:10px }
+    .brand-icon { width:32px; height:32px; background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#0a0a0f; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; box-shadow:0 0 14px rgba(224,176,96,0.4) }
+    .brand-name { font-size:17px; font-weight:700; color:var(--gold); letter-spacing:-0.02em }
+    .brand-sub { font-size:11px; color:var(--muted); margin-left:auto; font-style:italic }
+    .back-btn { all:unset; cursor:pointer; font-size:12px; color:var(--muted); padding:6px 12px; border:1px solid var(--border); border-radius:6px; transition:all var(--tr) }
+    .back-btn:hover { color:var(--gold); border-color:var(--gold); background:var(--gold-glow) }
+
+    .wrap { max-width:1120px; margin:0 auto; padding:0 20px 60px }
+    .hero { padding:36px 0 24px }
+    .hero-badge { font-size:10px; font-weight:600; letter-spacing:0.28em; text-transform:uppercase; color:var(--gold); margin-bottom:10px }
+    .hero h1 { font-size:clamp(1.5rem,4vw,2.2rem); font-weight:700; letter-spacing:-0.02em; margin-bottom:8px }
+    .hero h1 em { color:var(--gold); font-style:normal }
+    .hero p { color:var(--muted); font-size:13.5px; max-width:640px; line-height:1.7 }
+    .problem-text { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin-top:14px; font-size:13px; color:var(--text); line-height:1.8 }
+    .problem-text strong { color:var(--gold) }
+
+    .main-grid { display:grid; grid-template-columns:1fr 310px; gap:18px; align-items:start }
+    @media(max-width:760px) { .main-grid { grid-template-columns:1fr } }
+
+    .canvas-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden }
+    .panel-header { padding:10px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; font-size:10px; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:var(--muted) }
+    .live-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 2s ease-in-out infinite; box-shadow:0 0 6px var(--green) }
+    @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 6px var(--green)} 50%{opacity:.3;box-shadow:none} }
+    canvas { display:block; width:100%; background:#050912 }
+
+    /* ── PREMIUM INPUT PANEL ── */
+    @keyframes borderShimmer {
+      0%   { background-position: 0% 50% }
+      50%  { background-position: 100% 50% }
+      100% { background-position: 0% 50% }
+    }
+    @keyframes panelGlow {
+      0%,100% { box-shadow: 0 0 0 1px rgba(138,99,210,0.2), 0 8px 32px rgba(0,0,0,0.4) }
+      50%      { box-shadow: 0 0 0 1px rgba(224,176,96,0.25), 0 8px 40px rgba(224,176,96,0.08) }
+    }
+    @keyframes slideIn { from{opacity:0;transform:translateX(12px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes countUp { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+    .input-panel {
+      background: linear-gradient(160deg, #181824 0%, #13131c 60%, #161622 100%);
+      border: 1px solid rgba(138,99,210,0.22);
+      border-radius: var(--radius);
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      overflow: hidden;
+      animation: panelGlow 5s ease-in-out infinite;
+      position: relative;
+    }
+    .input-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(167,139,250,0.3), rgba(224,176,96,0.2), rgba(0,229,255,0.2), rgba(167,139,250,0.3));
+      background-size: 300% 300%;
+      animation: borderShimmer 6s ease infinite;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .panel-title-bar {
+      padding: 14px 18px 12px;
+      background: linear-gradient(135deg, rgba(167,139,250,0.08), rgba(224,176,96,0.05));
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .panel-title-icon {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--purple), #7c5cbf);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      box-shadow: 0 0 10px rgba(167,139,250,0.4);
+    }
+    .panel-title-text { font-size:10px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; color:var(--text); }
+    .panel-title-sub  { font-size:9px; color:var(--muted); margin-top:1px; }
+
+    .panel-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    .sec-block {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .sec-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px;
+      font-size: 9px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+    }
+    .sec-header.geo   { background: linear-gradient(90deg, rgba(91,163,245,0.12), transparent); color: var(--blue); border-bottom: 1px solid rgba(91,163,245,0.15); }
+    .sec-header.load  { background: linear-gradient(90deg, rgba(255,95,126,0.12), transparent); color: var(--red); border-bottom: 1px solid rgba(255,95,126,0.15); }
+    .sec-header.info  { background: linear-gradient(90deg, rgba(61,232,138,0.1), transparent); color: var(--green); border-bottom: 1px solid rgba(61,232,138,0.12); }
+    .sec-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    .sec-dot.geo  { background:var(--blue);  box-shadow:0 0 5px var(--blue); }
+    .sec-dot.load { background:var(--red);   box-shadow:0 0 5px var(--red); }
+    .sec-dot.info { background:var(--green); box-shadow:0 0 5px var(--green); }
+    .sec-body { padding: 10px 12px; background: rgba(0,0,0,0.18); display:flex; flex-direction:column; gap:8px; }
+
+    .field { display:flex; flex-direction:column; gap:4px; }
+    .field label { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; letter-spacing:.05em; }
+    .field label em { color:var(--text); font-style:italic; font-weight:600; }
+    .field input {
+      width:100%; background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px; color:var(--text);
+      font-family:'DM Mono',monospace; font-size:14px;
+      padding: 8px 12px; outline:none;
+      transition: border-color var(--tr), box-shadow var(--tr), background var(--tr);
+    }
+    .field input:focus {
+      border-color: var(--gold);
+      background: rgba(224,176,96,0.05);
+      box-shadow: 0 0 0 3px rgba(224,176,96,0.1);
+    }
+    .field input::placeholder { color:var(--dim) }
+
+    .info-row { display:flex; align-items:center; gap:8px; }
+    .info-badge {
+      font-size:9px; font-family:'DM Mono',monospace; font-weight:600;
+      padding: 2px 7px; border-radius:100px; letter-spacing:.05em;
+      flex-shrink:0;
+    }
+    .info-badge.pin    { background:rgba(91,163,245,0.15); color:var(--blue); border:1px solid rgba(91,163,245,0.3); }
+    .info-badge.roller { background:rgba(61,232,138,0.12); color:var(--green); border:1px solid rgba(61,232,138,0.25); }
+    .info-badge.load   { background:rgba(255,95,126,0.12); color:var(--red); border:1px solid rgba(255,95,126,0.25); }
+    .info-badge.angle  { background:rgba(167,139,250,0.12); color:var(--purple); border:1px solid rgba(167,139,250,0.25); }
+    .info-text { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; }
+
+    .btn-compute {
+      all:unset; cursor:pointer; width:100%;
+      padding: 13px 0;
+      background: linear-gradient(135deg, #c8902a, var(--gold), var(--gold2), #c8902a);
+      background-size: 300% 100%;
+      color: #0a0a0f;
+      font-size: 12px; font-weight: 800;
+      letter-spacing: .12em; text-transform: uppercase;
+      border-radius: 10px; text-align:center;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(200,160,80,0.25);
+      animation: borderShimmer 4s ease infinite;
+    }
+    .btn-compute:hover {
+      background-position: 100% 0;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(200,160,80,0.4);
+    }
+    .btn-compute:active { transform: scale(.97) }
+
+    .result-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-top:16px; animation:fadeUp .3s ease }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} }
+    .result-top { padding:16px 20px; background:var(--gold-glow); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px }
+    .result-top h3 { font-size:14px; font-weight:600 }
+
+    .ans-section { padding:16px 20px; border-bottom:1px solid var(--border) }
+    .ans-section-lbl { font-size:10px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); margin-bottom:10px }
+    .ans-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .ans-grid.cols2 { grid-template-columns:repeat(2,1fr); }
+    .ans-grid.cols3 { grid-template-columns:repeat(3,1fr); }
+    @media(max-width:600px) { .ans-grid,.ans-grid.cols2,.ans-grid.cols3 { grid-template-columns:1fr 1fr } }
+    .ans-box { background:var(--surface2); border-radius:12px; padding:16px 18px; border:1px solid var(--border); transition:transform 0.15s, box-shadow 0.15s }
+    .ans-box:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.3) }
+    .ans-box .lbl { font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:6px }
+    .ans-box .val { font-family:'DM Mono',monospace; font-size:22px; font-weight:600; color:var(--gold); line-height:1.2; letter-spacing:-0.01em }
+    .ans-box .note { font-size:11px; color:var(--muted); margin-top:4px }
+    .ans-box.tension     { border-color:rgba(61,232,138,0.2); background:linear-gradient(135deg,rgba(61,232,138,0.04),var(--surface2)) }
+    .ans-box.tension .val { color:var(--green) }
+    .ans-box.compression { border-color:rgba(0,229,255,0.2); background:linear-gradient(135deg,rgba(0,229,255,0.04),var(--surface2)) }
+    .ans-box.compression .val { color:var(--cyan) }
+    .ans-box.zero        { border-color:rgba(110,104,96,0.3) }
+    .ans-box.zero .val   { color:var(--muted) }
+
+    .steps-section { padding:28px 28px }
+    .steps-section h4 { font-size:12px; font-weight:700; letter-spacing:.20em; text-transform:uppercase; color:var(--muted); margin-bottom:20px }
+    .step { display:flex; gap:18px; margin-bottom:24px }
+    .step-n { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--purple),#5e4a9e); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#fff; flex-shrink:0; margin-top:3px; box-shadow:0 0 12px rgba(167,139,250,0.45) }
+    .step-body { font-family:'DM Mono',monospace; font-size:15.5px; line-height:2.2; color:var(--text); white-space:pre-wrap }
+    .step-body .eq { color:var(--gold) }
+    .step-body .num { color:var(--blue) }
+    .step-body .res { color:var(--green); font-weight:500 }
+    .step-body .tens { color:var(--green) }
+    .step-body .comp { color:var(--cyan) }
+    .step-body .zero { color:var(--muted) }
+
+    /* FULLSCREEN */
+    .canvas-panel.fullscreen { position:fixed; inset:0; z-index:9999; border-radius:0; border:none; background:#030710; display:flex; flex-direction:column }
+    .canvas-panel.fullscreen .panel-header { border-radius:0; background:linear-gradient(180deg,rgba(13,13,20,0.98),rgba(5,9,18,0.95)); backdrop-filter:blur(12px); flex-shrink:0; padding:14px 24px; font-size:11px; border-bottom:1px solid rgba(200,160,80,0.12) }
+    .canvas-panel.fullscreen canvas { flex:1; width:100% !important; height:100% !important }
+    .fs-btn { all:unset; cursor:pointer; margin-left:auto; font-size:16px; color:var(--muted); padding:4px 10px; border-radius:6px; transition:all 0.25s; line-height:1 }
+    .fs-btn:hover { color:var(--gold); background:rgba(200,160,80,0.15) }
+
+    .fs-answers { display:none }
+    .fs-title { display:none }
+
+    /* Reaction bar below canvas */
+    .rxn-bar { display:none; align-items:center; justify-content:center; gap:16px; padding:12px 16px; background:rgba(5,9,18,0.8); border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius) var(--radius); }
+    .rxn-bar.visible { display:flex; animation:fadeUp .35s ease; }
+    .rxn-card { display:flex; align-items:center; gap:10px; background:rgba(0,229,255,0.06); border:1px solid rgba(0,229,255,0.18); border-radius:10px; padding:8px 16px; min-width:120px; transition:border-color .2s }
+    .rxn-card:hover { border-color:rgba(0,229,255,0.4) }
+    .rxn-card .rxn-sym { font-family:'DM Mono',monospace; font-size:12px; font-weight:600; color:var(--muted); letter-spacing:.05em; white-space:nowrap; }
+    .rxn-card .rxn-val { font-family:'DM Mono',monospace; font-size:18px; font-weight:600; color:#00e5ff; letter-spacing:-.01em; }
+    .rxn-card .rxn-dir { font-size:10px; color:var(--muted); margin-top:1px; }
+    .rxn-sep { width:1px; height:32px; background:var(--border); }
+    .canvas-panel.fullscreen .fs-title { display:block; position:absolute; bottom:28px; left:28px; z-index:10; animation:fadeUp 0.4s ease }
+    .fs-title-text { font-size:11px; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:rgba(200,160,80,0.5) }
+    .fs-title-sub { font-size:18px; font-weight:300; color:rgba(240,234,216,0.35); margin-top:2px; letter-spacing:0.02em }
+    .canvas-panel.fullscreen .fs-answers { display:flex; position:absolute; bottom:24px; right:28px; gap:16px; z-index:10; animation:fadeUp 0.45s ease }
+    .fs-ans-card { background:rgba(10,14,24,0.7); backdrop-filter:blur(24px) saturate(1.2); border:1px solid rgba(200,160,80,0.18); border-radius:14px; padding:18px 24px 16px; min-width:160px; position:relative; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.4),0 0 1px rgba(200,160,80,0.3) inset }
+    .fs-ans-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(200,160,80,0.4),transparent) }
+    .fs-ans-card .fs-icon { font-size:14px; margin-bottom:8px; opacity:0.7 }
+    .fs-ans-card .fs-lbl { font-size:9px; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:rgba(200,160,80,0.6); margin-bottom:8px }
+    .fs-ans-card .fs-val { font-family:'DM Mono',monospace; font-size:18px; font-weight:500; color:var(--gold); line-height:1.3; word-break:break-all }
+    .fs-ans-card .fs-note { font-size:9px; color:rgba(122,116,104,0.8); margin-top:6px; letter-spacing:0.08em }
+
+    /* Legacy compat */
+    .sec-lbl { display:none }
+    .hr { display:none }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon">Σ</div>
+      <div class="brand-name">StaticsSolver</div>
+    </div>
+    <a class="back-btn" href="index.html">← Back to Hub</a>
+    <div class="brand-sub">Meriam &amp; Kraige — Engineering Mechanics: Statics</div>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-badge">Module 2 · Trusses · Problem 4/22</div>
+      <h1>Loaded Truss — <em>Method of Joints</em></h1>
+      <p>Determine the forces in <strong>all 13 members</strong> of the loaded truss using the method of joints, solved joint-by-joint.</p>
+      <div class="problem-text">
+        <strong>Problem 4/22</strong> — Five top-chord nodes (A–E) spaced <em>d</em> apart, with bottom-chord nodes H,
+        G, F at depth <em>d</em>. Applied loads: L/2 at A &amp; E, L at B, C, D (all downward). Pin at A,
+        45°-roller at E. <strong>All 13 member forces</strong> computed via method of joints.
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <div class="canvas-panel" id="canvasPanel">
+        <div class="panel-header">
+          <span class="live-dot"></span>Live Diagram — updates as you type
+          <button class="fs-btn" id="btn-fs" onclick="toggleFullscreen()" title="Toggle fullscreen">⤢</button>
+        </div>
+        <canvas id="c"></canvas>
+        <div class="rxn-bar" id="rxnBar">
+          <div class="rxn-card">
+            <div>
+              <div class="rxn-sym">A<sub style="font-size:9px">x</sub> →</div>
+              <div class="rxn-val" id="rxn-Ax">—</div>
+              <div class="rxn-dir">Horizontal reaction</div>
+            </div>
+          </div>
+          <div class="rxn-sep"></div>
+          <div class="rxn-card">
+            <div>
+              <div class="rxn-sym">A<sub style="font-size:9px">y</sub> ↑</div>
+              <div class="rxn-val" id="rxn-Ay">—</div>
+              <div class="rxn-dir">Vertical reaction at A</div>
+            </div>
+          </div>
+          <div class="rxn-sep"></div>
+          <div class="rxn-card">
+            <div>
+              <div class="rxn-sym">E ↗ (45°)</div>
+              <div class="rxn-val" id="rxn-E">—</div>
+              <div class="rxn-dir">Roller reaction at E</div>
+            </div>
+          </div>
+        </div>
+        <div class="fs-title">
+          <div class="fs-title-text">Problem 4/22</div>
+          <div class="fs-title-sub">Loaded Truss — Method of Joints</div>
+        </div>
+        <div class="fs-answers">
+          <div class="fs-ans-card">
+            <div class="fs-icon">⟷</div>
+            <div class="fs-lbl">Member AB</div>
+            <div class="fs-val" id="fs-AB">—</div>
+            <div class="fs-note">force in AB</div>
+          </div>
+          <div class="fs-ans-card">
+            <div class="fs-icon">↕</div>
+            <div class="fs-lbl">Member CG</div>
+            <div class="fs-val" id="fs-CG">—</div>
+            <div class="fs-note">force in CG</div>
+          </div>
+          <div class="fs-ans-card">
+            <div class="fs-icon">⟷</div>
+            <div class="fs-lbl">Member DE</div>
+            <div class="fs-val" id="fs-DE">—</div>
+            <div class="fs-note">force in DE</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-panel">
+        <div class="panel-title-bar">
+          <div class="panel-title-icon">⚙</div>
+          <div>
+            <div class="panel-title-text">Parameters</div>
+            <div class="panel-title-sub">Problem 4/22 — Method of Joints</div>
+          </div>
+        </div>
+        <div class="panel-body">
+
+          <!-- Geometry section -->
+          <div class="sec-block">
+            <div class="sec-header geo"><span class="sec-dot geo"></span>Geometry</div>
+            <div class="sec-body">
+              <div class="field">
+                <label><em>d</em> — Panel spacing (mm)</label>
+                <input type="text" id="d_val" value="1000" autocomplete="off" placeholder="e.g. 1000" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Load section -->
+          <div class="sec-block">
+            <div class="sec-header load"><span class="sec-dot load"></span>Applied Load</div>
+            <div class="sec-body">
+              <div class="field">
+                <label><em>L</em> — Full panel load (N)</label>
+                <input type="text" id="L_val" value="10000" autocomplete="off" placeholder="e.g. 10000" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Info section -->
+          <div class="sec-block">
+            <div class="sec-header info"><span class="sec-dot info"></span>Support Conditions</div>
+            <div class="sec-body" style="gap:6px">
+              <div class="info-row"><span class="info-badge pin">PIN</span><span class="info-text">A → Ax, Ay reactions</span></div>
+              <div class="info-row"><span class="info-badge roller">ROLLER</span><span class="info-text">E → 45° inclined (E↗ oblique)</span></div>
+              <div class="info-row"><span class="info-badge load">LOAD</span><span class="info-text">L/2 @ A &amp; E, L @ B,C,D</span></div>
+              <div class="info-row"><span class="info-badge angle">45°</span><span class="info-text">Diagonals AH, HC, CF, FE</span></div>
+            </div>
+          </div>
+
+          <button class="btn-compute" onclick="compute()" id="computeBtn">⟹ Compute Solution</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-panel" id="resultPanel" style="display:none">
+      <div class="result-top">
+        <span style="font-size:22px">✓</span>
+        <h3>Solution — Problem 4/22 — All 13 Members</h3>
+        <a href="blueprint_4_22.html" target="_blank" style="margin-left:auto;all:unset;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);border:1px solid rgba(200,160,80,0.3);padding:6px 14px;border-radius:6px;letter-spacing:.05em;transition:all .2s;" onmouseover="this.style.background='rgba(200,160,80,0.1)'" onmouseout="this.style.background=''">&#128196; View Blueprint</a>
+      </div>
+
+      <!-- TOP CHORD -->
+      <div class="ans-section">
+        <div class="ans-section-lbl">Top Chord</div>
+        <div class="ans-grid">
+          <div class="ans-box compression" id="box-AB"><div class="lbl">AB</div><div class="val" id="ans-AB">—</div><div class="note" id="note-AB">—</div></div>
+          <div class="ans-box compression" id="box-BC"><div class="lbl">BC</div><div class="val" id="ans-BC">—</div><div class="note" id="note-BC">—</div></div>
+          <div class="ans-box compression" id="box-CD"><div class="lbl">CD</div><div class="val" id="ans-CD">—</div><div class="note" id="note-CD">—</div></div>
+          <div class="ans-box compression" id="box-DE"><div class="lbl">DE</div><div class="val" id="ans-DE">—</div><div class="note" id="note-DE">—</div></div>
+        </div>
+      </div>
+
+      <!-- BOTTOM CHORD -->
+      <div class="ans-section">
+        <div class="ans-section-lbl">Bottom Chord</div>
+        <div class="ans-grid cols2">
+          <div class="ans-box tension" id="box-HG"><div class="lbl">HG</div><div class="val" id="ans-HG">—</div><div class="note" id="note-HG">—</div></div>
+          <div class="ans-box tension" id="box-GF"><div class="lbl">GF</div><div class="val" id="ans-GF">—</div><div class="note" id="note-GF">—</div></div>
+        </div>
+      </div>
+
+      <!-- VERTICALS -->
+      <div class="ans-section">
+        <div class="ans-section-lbl">Verticals</div>
+        <div class="ans-grid cols3">
+          <div class="ans-box compression" id="box-BH"><div class="lbl">BH</div><div class="val" id="ans-BH">—</div><div class="note" id="note-BH">—</div></div>
+          <div class="ans-box zero"      id="box-CG"><div class="lbl">CG</div><div class="val" id="ans-CG">—</div><div class="note" id="note-CG">—</div></div>
+          <div class="ans-box compression" id="box-DF"><div class="lbl">DF</div><div class="val" id="ans-DF">—</div><div class="note" id="note-DF">—</div></div>
+        </div>
+      </div>
+
+      <!-- DIAGONALS -->
+      <div class="ans-section">
+        <div class="ans-section-lbl">Diagonals</div>
+        <div class="ans-grid">
+          <div class="ans-box tension"     id="box-AH"><div class="lbl">AH</div><div class="val" id="ans-AH">—</div><div class="note" id="note-AH">—</div></div>
+          <div class="ans-box tension" id="box-BG"><div class="lbl">BG</div><div class="val" id="ans-BG">—</div><div class="note" id="note-BG">—</div></div>
+          <div class="ans-box tension" id="box-DG"><div class="lbl">DG</div><div class="val" id="ans-DG">—</div><div class="note" id="note-DG">—</div></div>
+          <div class="ans-box tension"     id="box-FE"><div class="lbl">FE</div><div class="val" id="ans-FE">—</div><div class="note" id="note-FE">—</div></div>
+        </div>
+      </div>
+
+      <div class="steps-section">
+        <h4>Step-by-Step Working</h4>
+        <div id="stepsContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+    const DEG = Math.PI / 180;
+    const sq2 = Math.SQRT2;
+    const f3 = v => v.toFixed(3), f2 = v => v.toFixed(2), f1 = v => v.toFixed(1), f0 = v => v.toFixed(0);
+
+    function parseField(id, def) {
+      const raw = document.getElementById(id).value.trim();
+      if (raw === '') return { val: def, sym: String(def), isNum: true };
+      const v = parseFloat(raw);
+      const ok = !isNaN(v) && isFinite(v) && v > 0;
+      return { val: ok ? v : def, sym: raw, isNum: ok };
+    }
+
+    const cvs = document.getElementById('c');
+    const ctx = cvs.getContext('2d');
+    let DPR = window.devicePixelRatio || 1;
+    let CW = 0, CH = 0;
+
+    function getInputs() {
+      return {
+        d: parseField('d_val', 1000),
+        L: parseField('L_val', 10000),
+      };
+    }
+    function getVals() {
+      const i = getInputs();
+      return { d: i.d.val, L: i.L.val };
+    }
+
+    function isFullscreen() {
+      return document.getElementById('canvasPanel').classList.contains('fullscreen');
+    }
+
+    function resizeCanvas() {
+      const rect = cvs.parentElement.getBoundingClientRect();
+      DPR = window.devicePixelRatio || 1;
+      CW = rect.width;
+      CH = isFullscreen() ? rect.height : Math.max(420, CW * 0.60);
+      cvs.width = CW * DPR; cvs.height = CH * DPR;
+      cvs.style.width = CW + 'px'; cvs.style.height = CH + 'px';
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(DPR, DPR);
+      drawDiagram();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    /* ================================================================
+       DRAW DIAGRAM
+    ================================================================ */
+    function drawDiagram() {
+      ctx.clearRect(0, 0, CW, CH);
+
+      // Grid
+      ctx.save();
+      ctx.strokeStyle = 'rgba(80,120,220,0.06)'; ctx.lineWidth = 0.5;
+      for (let x = 0; x < CW; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CH); ctx.stroke(); }
+      for (let y = 0; y < CH; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CW, y); ctx.stroke(); }
+      ctx.restore();
+
+      const inp = getInputs();
+      const { d, L } = getVals();
+
+      /*
+        Truss layout:
+        Top chord: A(0,0) B(d,0) C(2d,0) D(3d,0) E(4d,0)
+        Bottom chord: H(d,-d) G(2d,-d) F(3d,-d)   [hanging below — drawn DOWN]
+
+        We draw with Y increasing downward (canvas default).
+        Top chord at row yTop, bottom chord at yTop + unitPx.
+      */
+      const padTop = 100;    // space for load arrows + labels
+      const padBot = 70;     // space for supports
+      const padSide = 80;    // equal side padding for left and right
+
+      // unitPx = size of one panel; constrained by width AND height
+      const maxUnitFromW = (CW - 2 * padSide) / 4;
+      const maxUnitFromH = (CH - padTop - padBot);
+      const unitPx = Math.min(maxUnitFromW, maxUnitFromH);
+
+      // True horizontal centering: place A-E symmetrically in CW
+      // +30 offset compensates for Ax/Ay labels extending ~30px left of node A
+      const trussW = 4 * unitPx;
+      const padL = (CW - trussW) / 2 + 30;
+
+      const yTop = padTop;
+      const yBot = padTop + unitPx;
+
+      // Node screen coordinates
+      const nodes = {
+        A: [padL,               yTop],
+        B: [padL +   unitPx,    yTop],
+        C: [padL + 2*unitPx,    yTop],
+        D: [padL + 3*unitPx,    yTop],
+        E: [padL + 4*unitPx,    yTop],
+        H: [padL +   unitPx,    yBot],
+        G: [padL + 2*unitPx,    yBot],
+        F: [padL + 3*unitPx,    yBot],
+      };
+
+      // Members list
+      const members = [
+        // Top chord
+        ['A','B'], ['B','C'], ['C','D'], ['D','E'],
+        // Bottom chord
+        ['H','G'], ['G','F'],
+        // Verticals
+        ['B','H'], ['C','G'], ['D','F'],
+        // Diagonals
+        ['A','H'], ['B','G'], ['D','G'], ['F','E'],
+      ];
+
+      // Draw members
+      members.forEach(([p1, p2]) => {
+        const [x1,y1] = nodes[p1], [x2,y2] = nodes[p2];
+        ctx.save();
+        ctx.strokeStyle = '#4a90d9';
+        ctx.lineWidth = 3.5;
+        ctx.shadowColor = 'rgba(74,144,217,0.4)'; ctx.shadowBlur = 8;
+        ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+        ctx.restore();
+      });
+
+      // Node dots
+      Object.entries(nodes).forEach(([name,[x,y]]) => {
+        ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI*2);
+        ctx.fillStyle = '#c8a050'; ctx.fill();
+        ctx.strokeStyle = '#050912'; ctx.lineWidth = 2; ctx.stroke();
+      });
+
+      // Node labels
+      const lblOffsets = {
+        A: [-18, -4], B: [-6,-16], C: [-6,-16], D: [-6,-16], E: [-6,-16],
+        H: [-4, 18],  G: [-4, 18], F: [-4, 18]
+      };
+      Object.entries(nodes).forEach(([name,[x,y]]) => {
+        const [ox,oy] = lblOffsets[name] || [10,-10];
+        ctx.save();
+        ctx.font = 'bold 22px Inter,sans-serif';
+        ctx.fillStyle = '#f0ead8';
+        ctx.textAlign = 'center';
+        // Text shadow so label is readable against members
+        ctx.shadowColor = 'rgba(5,9,18,0.95)'; ctx.shadowBlur = 6;
+        ctx.fillText(name, x+ox, y+oy);
+        ctx.restore();
+      });
+
+      // Load arrows (downward) — L/2 at A and E, L at B,C,D
+      const loads = [
+        { node:'A', mag:'L/2', color:'#ff2255' },
+        { node:'B', mag:'L',   color:'#ff2255' },
+        { node:'C', mag:'L',   color:'#ff2255' },
+        { node:'D', mag:'L',   color:'#ff2255' },
+        { node:'E', mag:'L/2', color:'#ff4400' },
+      ];
+      const arrowLen = Math.min(60, padTop * 0.48);
+      loads.forEach(({node, mag, color}) => {
+        const [x,y] = nodes[node];
+        // Node E: put label LEFT to avoid legend; node A: keep right
+        const side = (node === 'E') ? 'left' : 'right';
+        drawArrow(x, y - arrowLen - 8, x, y - 8, color, 3.5, mag, side);
+      });
+
+      // Dimension line — spacing d
+      const dimY = yBot + 36;
+      drawDimLine(nodes.A[0], dimY, nodes.B[0], dimY, `d`, '#39ff14');
+      drawDimLine(nodes.B[0], dimY, nodes.C[0], dimY, `d`, '#39ff14');
+      drawDimLine(nodes.C[0], dimY, nodes.D[0], dimY, `d`, '#39ff14');
+      drawDimLine(nodes.D[0], dimY, nodes.E[0], dimY, `d`, '#39ff14');
+      // vertical d dimension
+      const vdX = nodes.E[0] + 20;
+      drawDimLineV(vdX, nodes.A[1], vdX, nodes.H[1], `d`, '#39ff14');
+
+      // Support A: pin
+      drawPin(ctx, nodes.A[0], nodes.A[1] + 6, false);
+      // Support E: roller at 45°
+      drawRoller45(ctx, nodes.E[0], nodes.E[1]);
+
+      // Reaction labels (after compute, show values if known)
+      drawReactionLabels(nodes.A, nodes.E);
+
+      // Legend — placed below dimension line, centered under truss
+      const legendCx = (nodes.A[0] + nodes.E[0]) / 2;
+      drawLegend(legendCx, dimY + 18);
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, lw, label, labelSide) {
+      const dx = x2-x1, dy = y2-y1;
+      const len = Math.hypot(dx, dy);
+      if (len < 1) return;
+      const ux = dx/len, uy = dy/len;
+      const hL = 10, hW = 5;
+      ctx.save();
+      ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = lw; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2 - ux*hL, y2 - uy*hL); ctx.stroke();
+      const px = -uy, py = ux;
+      ctx.beginPath();
+      ctx.moveTo(x2,y2);
+      ctx.lineTo(x2 - ux*hL + px*hW, y2 - uy*hL + py*hW);
+      ctx.lineTo(x2 - ux*hL - px*hW, y2 - uy*hL - py*hW);
+      ctx.closePath(); ctx.fill();
+      if (label) {
+        const mx = (x1+x2)/2, my = (y1+y2)/2;
+        ctx.font = '18px DM Mono,monospace';
+        ctx.fillStyle = color;
+        ctx.shadowColor = 'rgba(5,9,18,0.9)'; ctx.shadowBlur = 6;
+        ctx.textAlign = labelSide === 'right' ? 'left' : 'right';
+        ctx.fillText(label, mx + (labelSide === 'right' ? 24 : -24), my+4);
+      }
+      ctx.restore();
+    }
+
+    function drawDimLine(x1, y, x2, _y, label, color) {
+      ctx.save();
+      ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1.5;
+      ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(x1,y-6); ctx.lineTo(x1,y+6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x2,y-6); ctx.lineTo(x2,y+6); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x2,y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x1+9,y-3.5); ctx.lineTo(x1+9,y+3.5); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x2,y); ctx.lineTo(x2-9,y-3.5); ctx.lineTo(x2-9,y+3.5); ctx.closePath(); ctx.fill();
+      if (label) {
+        ctx.font='17px DM Mono,monospace'; ctx.textAlign='center';
+        ctx.shadowColor='rgba(5,9,18,0.9)'; ctx.shadowBlur=5;
+        ctx.fillText(label,(x1+x2)/2,y-13);
+      }
+      ctx.restore();
+    }
+
+    function drawDimLineV(x, y1, _x, y2, label, color) {
+      ctx.save();
+      ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1.5;
+      ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(x-6,y1); ctx.lineTo(x+6,y1); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x-6,y2); ctx.lineTo(x+6,y2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(x,y1); ctx.lineTo(x,y2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x,y1); ctx.lineTo(x-3,y1+8); ctx.lineTo(x+3,y1+8); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x,y2); ctx.lineTo(x-3,y2-8); ctx.lineTo(x+3,y2-8); ctx.closePath(); ctx.fill();
+      if (label) {
+        ctx.font='17px DM Mono,monospace'; ctx.textAlign='left';
+        ctx.shadowColor='rgba(5,9,18,0.9)'; ctx.shadowBlur=5;
+        ctx.fillText(label, x+12, (y1+y2)/2+6);
+      }
+      ctx.restore();
+    }
+
+    function drawPin(ctx, x, y, inclined) {
+      ctx.save();
+      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-13,y+22); ctx.lineTo(x+13,y+22); ctx.closePath();
+      ctx.fillStyle = 'rgba(100,120,160,0.7)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(150,180,220,0.5)'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x-17,y+23); ctx.lineTo(x+17,y+23); ctx.strokeStyle='rgba(150,180,220,0.5)'; ctx.lineWidth=2; ctx.stroke();
+      for (let i=-13; i<=13; i+=6.5) { ctx.beginPath(); ctx.moveTo(x+i,y+23); ctx.lineTo(x+i-5,y+30); ctx.lineWidth=1; ctx.stroke(); }
+      // Highlight Ax and Ay labels
+      ctx.font='16px DM Mono,monospace'; ctx.fillStyle='#c8a050';
+      ctx.textAlign='right'; ctx.fillText('Ax→', x-20, y+6);
+      ctx.fillText('Ay↑', x-20, y+22);
+      ctx.restore();
+    }
+
+    function drawRoller45(ctx, x, y) {
+      // 45°-inclined roller at E
+      // Reaction INTO truss = upper-LEFT (NW): Ex=2L leftward, Ey=2L upward
+      // Wall surface: '/' shape (NE–SW) positioned to the lower-right (SE) of E
+      ctx.save();
+
+      const S2 = 0.70711; // 1/√2
+      // Reaction direction in canvas (NW = left+up): (-S2, -S2)
+      const rDx = -S2, rDy = -S2;
+      // Into-wall direction (SE = right+down, opposite to reaction): (S2, S2)
+      const wDx = S2,  wDy = S2;
+      // Wall tangent ('/' direction = NE: right+up in canvas): (S2, -S2)
+      const tDx = S2,  tDy = -S2;
+
+      // Triangle: tip at node E, body opens toward wall (SE)
+      const triH = 18, triHB = 13;
+      const bCx = x + wDx * triH, bCy = y + wDy * triH;
+      ctx.beginPath();
+      ctx.moveTo(x, y); // tip = node
+      ctx.lineTo(bCx + tDx * triHB, bCy + tDy * triHB);
+      ctx.lineTo(bCx - tDx * triHB, bCy - tDy * triHB);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(90,110,170,0.75)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(140,170,220,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+      // Roller circle (between triangle base and wall surface)
+      const rCx = bCx + wDx * 7, rCy = bCy + wDy * 7;
+      ctx.beginPath();
+      ctx.arc(rCx, rCy, 5, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(140,170,220,0.7)'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = 'rgba(70,90,150,0.5)'; ctx.fill();
+
+      // Wall line: '/' tilted at 45°, positioned just past the roller
+      const wCx = rCx + wDx * 6, wCy = rCy + wDy * 6;
+      const wLen = 24;
+      ctx.beginPath();
+      ctx.moveTo(wCx + tDx * wLen, wCy + tDy * wLen);
+      ctx.lineTo(wCx - tDx * wLen, wCy - tDy * wLen);
+      ctx.strokeStyle = 'rgba(140,170,220,0.6)'; ctx.lineWidth = 2; ctx.stroke();
+
+      // Hatch marks on the outer (SE) side of wall
+      for (let i = -3; i <= 3; i++) {
+        const hx = wCx + tDx * i * 7, hy = wCy + tDy * i * 7;
+        ctx.beginPath();
+        ctx.moveTo(hx, hy);
+        ctx.lineTo(hx + wDx * 8, hy + wDy * 8);
+        ctx.strokeStyle = 'rgba(140,170,220,0.3)'; ctx.lineWidth = 1; ctx.stroke();
+      }
+
+      // Cyan reaction arrow: from E pointing upper-LEFT (NW)
+      const aStart = 6, aEnd = 28;
+      const ax1 = x + rDx * aStart, ay1 = y + rDy * aStart;
+      const ax2 = x + rDx * aEnd,   ay2 = y + rDy * aEnd;
+      ctx.beginPath();
+      ctx.moveTo(ax1, ay1); ctx.lineTo(ax2, ay2);
+      ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 1.8; ctx.stroke();
+      const ah = 7, aw = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(ax2, ay2);
+      ctx.lineTo(ax2 - rDx * ah + tDx * aw, ay2 - rDy * ah + tDy * aw);
+      ctx.lineTo(ax2 - rDx * ah - tDx * aw, ay2 - rDy * ah - tDy * aw);
+      ctx.closePath();
+      ctx.fillStyle = '#00e5ff'; ctx.fill();
+
+      // Label: placed to the right of E, below the roller so it doesn't clash with L/2 above
+      ctx.font = '16px DM Mono,monospace';
+      ctx.fillStyle = '#e0b060';
+      ctx.shadowColor = 'rgba(5,9,18,0.9)'; ctx.shadowBlur = 5;
+      ctx.textAlign = 'left';
+      ctx.fillText('E(45°)↖', x + 10, y + 32);
+      ctx.restore();
+    }
+
+    let _lastAns = null;
+    function drawReactionLabels(A, E) {
+      // Reactions are now shown in the HTML bar below the canvas — nothing to draw here.
+    }
+
+    function drawLegend(cx, startY) {
+      // Lay items out in a horizontal row, centered at cx, starting below dimY
+      const items = [
+        { color:'#4a90d9', label:'Truss member' },
+        { color:'#ff2255', label:'Applied load' },
+        { color:'#39ff14', label:'Dimensions (d)' },
+        { color:'#00e5ff', label:'Reactions' },
+      ];
+      ctx.save();
+      ctx.font = '14px DM Mono,monospace';
+      // Measure total width needed
+      const pad = 20, gap = 28, swatchW = 12;
+      let totalW = 0;
+      const widths = items.map(it => { const w = ctx.measureText(it.label).width; totalW += swatchW + 6 + w; return w; });
+      totalW += gap * (items.length - 1);
+      let lx = cx - totalW / 2;
+      const ly = startY;
+      // Background pill
+      ctx.fillStyle = 'rgba(5,9,18,0.85)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(lx - pad, ly - 6, totalW + pad*2, 26, 8);
+      ctx.fill(); ctx.stroke();
+      // Draw each item
+      items.forEach((it, i) => {
+        ctx.fillStyle = it.color;
+        ctx.fillRect(lx, ly + 4, swatchW, 10);
+        ctx.fillStyle = 'rgba(240,234,216,0.95)';
+        ctx.textAlign = 'left';
+        ctx.fillText(it.label, lx + swatchW + 6, ly + 14);
+        lx += swatchW + 6 + widths[i] + gap;
+      });
+      ctx.restore();
+    }
+
+    /* ================================================================
+       COMPUTE — All 13 Members via Method of Joints
+    ================================================================ */
+    function compute() {
+      try {
+        const inp = getInputs();
+        const { d, L } = getVals();
+        const anyS = !inp.L.isNum;
+        const sL = inp.L.sym;
+
+        /* ── Reactions ────────────────────────────────────────────────
+           ΣM_A=0: −Ld − 2Ld − 3Ld − 2Ld + E·(1/√2)·4d = 0
+                   −8Ld + 2√2·E·d = 0  →  E = 2√2·L
+           Ex = E/√2 = 2L  (←),  Ey = 2L  (↑)
+           Ax = 2L (→),  Ay = 2L (↑)
+        */
+        const E_mag  = 2 * sq2 * L;
+        const Ex     = 2 * L;
+        const Ey_val = 2 * L;
+        const Ax_val = 2 * L;
+        const Ay_val = 2 * L;
+        _lastAns = { Ax: Ax_val, Ay: Ay_val, E_mag };
+
+        // Populate reaction bar below canvas
+        const rxnFmt = v => anyS ? `${+(v/L).toFixed(2)}${sL}` : f2(v/1000) + ' kN';
+        document.getElementById('rxn-Ax').textContent = rxnFmt(Ax_val);
+        document.getElementById('rxn-Ay').textContent = rxnFmt(Ay_val);
+        document.getElementById('rxn-E').textContent  = rxnFmt(E_mag);
+        document.getElementById('rxnBar').classList.add('visible');
+
+        /* ── Joint A ─────────────────────────────────────────────────
+           ΣFy: 2L − L/2 − AH/√2 = 0  → AH = 3√2L/2  (T)
+           ΣFx: 2L + AH/√2 − AB = 0   → AB = 7L/2    (C)
+        */
+        const AH_val = (3 * sq2 / 2) * L;
+        const AB_val = 3.5 * L;
+
+        /* ── Joint E (symmetric with A) ─────────────────────────────
+           FE = 3√2L/2 (T),  DE = 7L/2 (C)
+        */
+        const FE_val = AH_val;
+        const DE_val = AB_val;
+
+        /* ── Joint H ─────────────────────────────────────────────────
+           AH=T (pulls up-left).
+           ΣFy: AH/√2 + BH = 0  → 1.5L + BH = 0  → BH = 1.5L (C)
+           ΣFx: -AH/√2 + HG = 0 → -1.5L + HG = 0 → HG = 1.5L (T)
+        */
+        const BH_val = 1.5 * L;
+        const HG_val = 1.5 * L;
+
+        /* ── Joint B ─────────────────────────────────────────────────
+           AB=C (pushes right), BH=C (pushes up).
+           ΣFy: BH - L - BG/√2 = 0 → 1.5L - L - BG/√2 = 0 → BG = 0.5√2 L (T)
+           ΣFx: AB + BC + BG/√2 = 0 → 3.5L + BC + 0.5L = 0 → BC = 4L (C)
+        */
+        const BG_val = 0.5 * sq2 * L;
+        const BC_val = 4 * L;
+
+        /* ── Joint C ─────────────────────────────────────────────────
+           BC=C (pushes right). No diagonals at C.
+           ΣFy: -L - CG = 0 → CG = L (C)
+           ΣFx: BC + CD = 0 → 4L + CD = 0 → CD = 4L (C)
+        */
+        const CG_val = L;
+        const CD_val = 4 * L;
+
+        /* ── Symmetry (Joints D, F, G) ──────────────────────────────
+           By symmetry, right side matches left side.
+        */
+        const DF_val = BH_val;
+        const GF_val = HG_val;
+        const DG_val = BG_val;
+
+        /* ── Format helper ─────────────────────────────────────────── */
+        const fmtC = (v, label) => anyS
+          ? { text: `${+(v/L).toFixed(3)} × ${sL}`, note: label }
+          : { text: f2(v/1000) + ' kN', note: label };
+        const fmtZ = () => ({ text: '0', note: 'Zero-force member' });
+
+        /* ── Update all boxes ────────────────────────────────────────── */
+        const set = (id, boxId, data, cls) => {
+          document.getElementById(id).textContent = data.text;
+          document.getElementById('note-' + id.replace('ans-','')).textContent = data.note;
+          const box = document.getElementById(boxId);
+          box.className = 'ans-box ' + cls;
+        };
+        set('ans-AB','box-AB', fmtC(AB_val,'Compression (C)'), 'compression');
+        set('ans-BC','box-BC', fmtC(BC_val,'Compression (C)'), 'compression');
+        set('ans-CD','box-CD', fmtC(CD_val,'Compression (C)'), 'compression');
+        set('ans-DE','box-DE', fmtC(DE_val,'Compression (C)'), 'compression');
+        set('ans-HG','box-HG', fmtC(HG_val,'Tension (T)'), 'tension');
+        set('ans-GF','box-GF', fmtC(GF_val,'Tension (T)'), 'tension');
+        set('ans-BH','box-BH', fmtC(BH_val,'Compression (C)'), 'compression');
+        set('ans-CG','box-CG', fmtC(CG_val,'Compression (C)'), 'compression');
+        set('ans-DF','box-DF', fmtC(DF_val,'Compression (C)'), 'compression');
+        set('ans-AH','box-AH', fmtC(AH_val,'Tension (T)'), 'tension');
+        set('ans-BG','box-BG', fmtC(BG_val,'Tension (T)'), 'tension');
+        set('ans-DG','box-DG', fmtC(DG_val,'Tension (T)'), 'tension');
+        set('ans-FE','box-FE', fmtC(FE_val,'Tension (T)'), 'tension');
+
+        // Fullscreen overlays (keep 3 key members)
+        const fmt1 = v => anyS ? `${+(v/L).toFixed(2)}L` : f1(v/1000)+' kN';
+        document.getElementById('fs-AB').textContent = fmt1(AB_val) + ' C';
+        document.getElementById('fs-CG').textContent = fmt1(CG_val) + ' C';
+        document.getElementById('fs-DE').textContent = fmt1(DE_val) + ' C';
+
+        /* ── Steps ───────────────────────────────────────────────────── */
+        const n = (v) => anyS ? `${+(v/L).toFixed(3)}×${sL}` : f2(v/1000)+' kN';
+        const steps = [
+          { n:1, b:`<span class="eq">Global equilibrium — reactions</span>
+
+ΣM_A=0: −${sL}d − 2${sL}d − 3${sL}d − 2${sL}d + E·(1/√2)·4d = 0
+  <span class="res">E = 2√2·${sL}${anyS?'':' = '+f2(E_mag/1000)+' kN'}</span>
+<span class="eq">ΣFx=0</span>: Ax = 2${sL}    <span class="eq">ΣFy=0</span>: Ay = 2${sL}` },
+          { n:2, b:`<span class="eq">Joint A → AH (T), AB (C)</span>
+
+ΣFy: 2${sL} − ${sL}/2 − AH/√2 = 0
+  <span class="tens">AH = 3√2${sL}/2 = ${n(AH_val)}  T</span>
+ΣFx: 2${sL} + AH/√2 − AB = 0
+  <span class="comp">AB = 7${sL}/2 = ${n(AB_val)}  C</span>` },
+          { n:3, b:`<span class="eq">Joint E → FE (T), DE (C)</span>  [symmetric with A]
+
+  <span class="tens">FE = 3√2${sL}/2 = ${n(FE_val)}  T</span>
+  <span class="comp">DE = 7${sL}/2 = ${n(DE_val)}  C</span>` },
+          { n:4, b:`<span class="eq">Joint H → BH (C), HG (T)</span>
+
+ΣFy: AH/√2 + BH = 0  →  <span class="comp">BH = 1.5${sL} = ${n(BH_val)}  C</span>
+ΣFx: -AH/√2 + HG = 0  →  <span class="tens">HG = 1.5${sL} = ${n(HG_val)}  T</span>` },
+          { n:5, b:`<span class="eq">Joint B → BG (T), BC (C)</span>
+
+ΣFy: BH − ${sL} − BG/√2 = 0
+  <span class="tens">BG = ${sL}√2/2 = ${n(BG_val)}  T</span>
+ΣFx: AB + BC + BG/√2 = 0
+  <span class="comp">BC = 4${sL} = ${n(BC_val)}  C</span>` },
+          { n:6, b:`<span class="eq">Joint C → CG (C), CD (C)</span>
+
+ΣFy: −${sL} − CG = 0  →  <span class="comp">CG = ${sL} = ${n(CG_val)}  C</span>
+ΣFx: BC + CD = 0  →  <span class="comp">CD = 4${sL} = ${n(CD_val)}  C</span>` },
+          { n:7, b:`<span class="eq">Joints D, F, G (Symmetry)</span>
+
+  <span class="comp">CD=DE=4${sL}, 3.5${sL}  C</span>
+  <span class="comp">DF = 1.5${sL} = ${n(DF_val)}  C</span>
+  <span class="tens">DG = ${sL}√2/2 = ${n(DG_val)}  T</span>
+  <span class="tens">GF = 1.5${sL} = ${n(GF_val)}  T</span>` },
+          { n:8, b:`<span class="eq">Verification at Joint G</span>
+
+At G: HG (←T), GF (→T), CG (↓C), BG (↖T), DG (↗T)
+  ΣFx: −1.5${sL} − 0.5${sL} + 0.5${sL} + 1.5${sL} = 0 ✓
+  ΣFy: −${sL} (from CG) + 0.5${sL} + 0.5${sL} = 0 ✓` },
+          { n:9, b:`<span class="eq">All 13 Members — Summary</span>
+
+Top chord (C):  <span class="comp">AB=DE = 3.5${sL}, BC=CD = 4${sL}</span>
+Bot chord (T):  <span class="tens">HG=GF = 1.5${sL} = ${n(HG_val)}</span>
+Verticals (C):  <span class="comp">BH=DF = 1.5${sL}, CG = ${sL}</span>
+Diag out  (T):  <span class="tens">AH=FE = 1.5√2${sL} = ${n(AH_val)}</span>
+Diag in   (T):  <span class="tens">BG=DG = 0.5√2${sL} = ${n(BG_val)}</span>` }
+        ];
+
+        document.getElementById('stepsContainer').innerHTML =
+          steps.map(s =>
+            `<div class="step"><div class="step-n">${s.n}</div><div class="step-body">${s.b}</div></div>`
+          ).join('');
+        document.getElementById('resultPanel').style.display = 'block';
+        drawDiagram();
+      } catch(e) {
+        console.error('compute() error:', e);
+        drawDiagram();
+      }
+    }
+
+    /* ── FULLSCREEN TOGGLE ── */
+    function toggleFullscreen() {
+      const panel = document.getElementById('canvasPanel');
+      const btn   = document.getElementById('btn-fs');
+      panel.classList.toggle('fullscreen');
+      const isFs = panel.classList.contains('fullscreen');
+      btn.textContent = isFs ? '✕' : '⤢';
+      btn.title = isFs ? 'Exit fullscreen' : 'Toggle fullscreen';
+      setTimeout(resizeCanvas, 50);
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        const panel = document.getElementById('canvasPanel');
+        if (panel.classList.contains('fullscreen')) toggleFullscreen();
+      }
+    });
+
+    document.querySelectorAll('input').forEach(el => el.addEventListener('input', () => { _lastAns = null; drawDiagram(); }));
+    window.addEventListener('load', () => resizeCanvas());
+  </script>
+</body>
+</html>

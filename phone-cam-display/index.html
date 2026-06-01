@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhoneCam Display – Laptop Screen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #1a1a26;
+      --border: rgba(255,255,255,0.07);
+      --accent: #6c63ff;
+      --accent2: #00d4ff;
+      --accent3: #ff6b9d;
+      --text: #f0f0ff;
+      --muted: #8888aa;
+      --success: #00e5a0;
+      --warning: #ffb347;
+      --danger: #ff5252;
+      --glow: 0 0 40px rgba(108,99,255,0.3);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(108,99,255,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 90%, rgba(0,212,255,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 50% 50%, rgba(255,107,157,0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app-wrapper {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 28px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(18,18,26,0.8);
+      backdrop-filter: blur(20px);
+      flex-shrink: 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 4px 20px rgba(108,99,255,0.4);
+    }
+
+    .logo-text h1 {
+      font-size: 17px;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+
+    .logo-text p { font-size: 11px; color: var(--muted); font-weight: 400; }
+
+    .header-right { display: flex; align-items: center; gap: 14px; }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 14px;
+      border-radius: 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: all 0.3s;
+    }
+
+    .status-badge.connected .status-dot {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse-dot 2s infinite;
+    }
+
+    .status-badge.waiting .status-dot {
+      background: var(--warning);
+      box-shadow: 0 0 8px var(--warning);
+      animation: pulse-dot 1.5s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.85); }
+    }
+
+    .btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      background: var(--surface2);
+      color: var(--text);
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    /* ── Main Content ── */
+    .main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    /* ── Video Area ── */
+    .video-area {
+      position: relative;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #remote-video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+
+    #remote-video.active { display: block; }
+
+    /* Fullscreen btn */
+    .fullscreen-btn {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: rgba(18,18,26,0.8);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      backdrop-filter: blur(10px);
+      display: none;
+    }
+
+    .fullscreen-btn.visible { display: flex; }
+    .fullscreen-btn:hover { color: var(--text); border-color: var(--accent); background: rgba(108,99,255,0.2); }
+
+    /* Video info overlay */
+    .video-info-bar {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(10,10,15,0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: var(--muted);
+      display: none;
+      gap: 16px;
+    }
+
+    .video-info-bar.visible { display: flex; }
+    .video-info-bar span { color: var(--text); font-weight: 600; }
+
+    /* Waiting placeholder */
+    .waiting-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .waiting-animation {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(0,212,255,0.08));
+      border: 2px solid rgba(108,99,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      animation: float 3s ease-in-out infinite;
+      box-shadow: 0 0 60px rgba(108,99,255,0.15), inset 0 0 40px rgba(108,99,255,0.05);
+      position: relative;
+    }
+
+    .waiting-animation::before, .waiting-animation::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(108,99,255,0.2);
+      animation: ripple 2.5s ease-out infinite;
+    }
+    .waiting-animation::before { inset: -18px; animation-delay: 0s; }
+    .waiting-animation::after { inset: -36px; animation-delay: 0.7s; }
+
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    @keyframes ripple {
+      0% { opacity: 0.6; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.4); }
+    }
+
+    .waiting-screen h2 { font-size: 22px; font-weight: 700; margin-top: 10px; }
+    .waiting-screen p { font-size: 14px; color: var(--muted); max-width: 340px; line-height: 1.6; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      border-left: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .sidebar-section {
+      padding: 22px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    /* Connection Code */
+    .code-display {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .code-display::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(108,99,255,0.05), transparent);
+      pointer-events: none;
+    }
+
+    .code-label { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+
+    .code-value {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 8px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .code-sub { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+    .copy-btn {
+      margin-top: 12px;
+      width: 100%;
+      padding: 9px;
+      border-radius: 8px;
+      background: rgba(108,99,255,0.15);
+      border: 1px solid rgba(108,99,255,0.3);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .copy-btn:hover {
+      background: rgba(108,99,255,0.25);
+      border-color: var(--accent);
+    }
+
+    /* QR placeholder */
+    .qr-box {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 1;
+      margin-bottom: 10px;
+    }
+
+    #qr-canvas { width: 100%; height: 100%; display: block; }
+
+    .qr-hint { font-size: 11px; color: var(--muted); text-align: center; }
+
+    /* Steps */
+    .steps { display: flex; flex-direction: column; gap: 10px; }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-text { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+    .step-text strong { color: var(--text); }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .stat-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 16px; font-weight: 700; color: var(--text); }
+    .stat-value.good { color: var(--success); }
+    .stat-value.warn { color: var(--warning); }
+
+    /* Controls */
+    .controls-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-btn {
+      width: 100%;
+      padding: 11px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .control-btn:hover {
+      background: rgba(108,99,255,0.15);
+      border-color: rgba(108,99,255,0.4);
+    }
+
+    .control-btn.danger:hover {
+      background: rgba(255,82,82,0.15);
+      border-color: rgba(255,82,82,0.4);
+      color: var(--danger);
+    }
+
+    /* Reconnect overlay */
+    #reconnect-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,15,0.92);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    #reconnect-overlay.visible { display: flex; }
+
+    .reconnect-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      text-align: center;
+      max-width: 400px;
+      box-shadow: var(--glow);
+    }
+
+    .reconnect-box h3 { font-size: 20px; margin-bottom: 10px; }
+    .reconnect-box p { color: var(--muted); font-size: 14px; margin-bottom: 22px; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: var(--glow); }
+
+    /* Notification toast */
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 22px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      z-index: 200;
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.success { border-color: rgba(0,229,160,0.4); color: var(--success); }
+    #toast.error { border-color: rgba(255,82,82,0.4); color: var(--danger); }
+
+    /* Sidebar scrollbar */
+    .sidebar::-webkit-scrollbar { width: 5px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    @media (max-width: 768px) {
+      .main { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">📱</div>
+      <div class="logo-text">
+        <h1>PhoneCam Display</h1>
+        <p>Wireless Camera Streaming</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-badge" id="status-badge">
+        <div class="status-dot"></div>
+        <span id="status-text">Initializing…</span>
+      </div>
+      <button class="btn btn-ghost" onclick="resetConnection()">New Session</button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Video Area -->
+    <div class="video-area">
+      <div class="waiting-screen" id="waiting-screen">
+        <div class="waiting-animation">📷</div>
+        <h2>Waiting for Phone</h2>
+        <p>Open the <strong>phone.html</strong> page on your phone's browser and enter the session code shown on the right.</p>
+      </div>
+
+      <video id="remote-video" autoplay playsinline></video>
+
+      <div class="video-info-bar" id="video-info-bar">
+        <div>Resolution: <span id="info-res">—</span></div>
+        <div>Camera: <span id="info-cam">Rear</span></div>
+        <div>Quality: <span id="info-qual">HD</span></div>
+      </div>
+
+      <button class="fullscreen-btn" id="fullscreen-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- Session Code -->
+      <div class="sidebar-section">
+        <div class="section-label">Session Code</div>
+        <div class="code-display">
+          <div class="code-label">Share this code with your phone</div>
+          <div class="code-value" id="session-code">- - - -</div>
+          <div class="code-sub">Enter this in the phone.html page<br>on the same WiFi network</div>
+          <button class="copy-btn" onclick="copyCode()">📋 Copy Code</button>
+        </div>
+      </div>
+
+      <!-- QR Code -->
+      <div class="sidebar-section">
+        <div class="section-label">QR Code (Scan from Phone)</div>
+        <div class="qr-box">
+          <canvas id="qr-canvas"></canvas>
+        </div>
+        <div class="qr-hint">Scan to open the phone page automatically with the code pre-filled</div>
+      </div>
+
+      <!-- How to connect -->
+      <div class="sidebar-section">
+        <div class="section-label">How to Connect</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-text"><strong>Connect to same WiFi</strong> — both phone and laptop on same network</div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-text"><strong>Open phone.html</strong> on your phone (send via WhatsApp / email / USB)</div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-text"><strong>Enter the session code</strong> on your phone and tap Connect</div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-text"><strong>Allow camera permission</strong> when your phone asks</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="sidebar-section">
+        <div class="section-label">Stream Stats</div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Connection</div>
+            <div class="stat-value" id="stat-conn">Offline</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Latency</div>
+            <div class="stat-value good" id="stat-ping">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Resolution</div>
+            <div class="stat-value" id="stat-res">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">FPS</div>
+            <div class="stat-value good" id="stat-fps">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="sidebar-section">
+        <div class="section-label">Controls</div>
+        <div class="controls-row">
+          <button class="control-btn" onclick="takeSnapshot()" id="snapshot-btn">
+            📸 Take Snapshot
+          </button>
+          <button class="control-btn" onclick="toggleMirror()" id="mirror-btn">
+            🔄 Mirror Video
+          </button>
+          <button class="control-btn danger" onclick="disconnect()">
+            ✕ Disconnect
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Reconnect overlay -->
+<div id="reconnect-overlay">
+  <div class="reconnect-box">
+    <div style="font-size:48px;margin-bottom:12px;">🔌</div>
+    <h3>Phone Disconnected</h3>
+    <p>Your phone camera stream has ended. Get a new session code to reconnect.</p>
+    <button class="btn-primary" onclick="resetConnection()">Get New Code</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// ─────────────────────────────────────────────
+// Global State
+// ─────────────────────────────────────────────
+let peer = null;
+let call = null;
+let sessionCode = '';
+let isMirrored = false;
+let fpsInterval = null;
+let frameCount = 0;
+let lastFpsTime = 0;
+
+const video = document.getElementById('remote-video');
+const waitingScreen = document.getElementById('waiting-screen');
+const statusBadge = document.getElementById('status-badge');
+const statusText = document.getElementById('status-text');
+
+// ─────────────────────────────────────────────
+// Generate session code & init PeerJS
+// ─────────────────────────────────────────────
+function generateCode() {
+  // random 4-digit code
+  return Math.floor(1000 + Math.random() * 9000).toString();
+}
+
+function init() {
+  sessionCode = generateCode();
+  const peerId = 'phonecam-laptop-' + sessionCode;
+
+  setStatus('waiting', 'Waiting for phone…');
+  document.getElementById('session-code').textContent = sessionCode;
+  document.getElementById('stat-conn').textContent = 'Waiting';
+
+  // Destroy previous peer if any
+  if (peer) { peer.destroy(); peer = null; }
+
+  peer = new Peer(peerId, {
+    host: '0.peerjs.com',
+    port: 443,
+    path: '/',
+    secure: true,
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        {
+          urls: 'turn:openrelay.metered.ca:80',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        }
+      ]
+    }
+  });
+
+  peer.on('open', (id) => {
+    console.log('Peer ID:', id);
+    setStatus('waiting', 'Waiting for phone…');
+    generateQR();
+  });
+
+  peer.on('call', (incomingCall) => {
+    call = incomingCall;
+    // Answer with no local stream (we only want to receive)
+    call.answer();
+    setStatus('waiting', 'Connecting stream…');
+
+    call.on('stream', (remoteStream) => {
+      video.srcObject = remoteStream;
+      video.classList.add('active');
+      waitingScreen.style.display = 'none';
+      document.getElementById('fullscreen-btn').classList.add('visible');
+      document.getElementById('video-info-bar').classList.add('visible');
+      setStatus('connected', 'Connected');
+      document.getElementById('stat-conn').textContent = 'Live';
+      startFpsTracker();
+      updateResolutionInfo();
+      showToast('📱 Phone connected! Camera stream is live.', 'success');
+    });
+
+    call.on('close', () => onDisconnected());
+    call.on('error', () => onDisconnected());
+  });
+
+  peer.on('error', (err) => {
+    console.error('PeerJS error:', err);
+    if (err.type === 'unavailable-id') {
+      // Code already taken — regenerate
+      setTimeout(init, 500);
+    } else {
+      setStatus('error', 'Network error – retrying…');
+      setTimeout(init, 3000);
+    }
+  });
+
+  peer.on('disconnected', () => {
+    peer.reconnect();
+  });
+}
+
+function onDisconnected() {
+  video.srcObject = null;
+  video.classList.remove('active');
+  waitingScreen.style.display = 'flex';
+  document.getElementById('fullscreen-btn').classList.remove('visible');
+  document.getElementById('video-info-bar').classList.remove('visible');
+  setStatus('idle', 'Disconnected');
+  document.getElementById('stat-conn').textContent = 'Offline';
+  document.getElementById('stat-fps').textContent = '—';
+  document.getElementById('stat-res').textContent = '—';
+  stopFpsTracker();
+  document.getElementById('reconnect-overlay').classList.add('visible');
+}
+
+// ─────────────────────────────────────────────
+// Status helpers
+// ─────────────────────────────────────────────
+function setStatus(type, text) {
+  statusBadge.className = 'status-badge';
+  if (type === 'connected') statusBadge.classList.add('connected');
+  else if (type === 'waiting') statusBadge.classList.add('waiting');
+  statusText.textContent = text;
+}
+
+// ─────────────────────────────────────────────
+// QR Code
+// ─────────────────────────────────────────────
+function generateQR() {
+  const canvas = document.getElementById('qr-canvas');
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+
+  // URL to the phone page with code pre-filled
+  const phoneUrl = window.location.href.replace('index.html', 'phone.html').replace(/\?.*$/, '') + '?code=' + sessionCode;
+
+  try {
+    QRCode.toCanvas(canvas, phoneUrl, {
+      width: 200,
+      margin: 1,
+      color: { dark: '#0a0a0f', light: '#ffffff' }
+    }, (err) => {
+      if (err) console.log('QR generation info:', err);
+    });
+  } catch(e) {
+    // QR lib might use different API
+    new QRCode(canvas, {
+      text: phoneUrl,
+      width: 200,
+      height: 200,
+      colorDark: '#0a0a0f',
+      colorLight: '#ffffff'
+    });
+  }
+}
+
+// ─────────────────────────────────────────────
+// FPS Tracker
+// ─────────────────────────────────────────────
+function startFpsTracker() {
+  stopFpsTracker();
+  lastFpsTime = performance.now();
+  frameCount = 0;
+
+  function countFrame() {
+    if (!video.srcObject) return;
+    frameCount++;
+    const now = performance.now();
+    if (now - lastFpsTime >= 1000) {
+      const fps = Math.round(frameCount * 1000 / (now - lastFpsTime));
+      document.getElementById('stat-fps').textContent = fps + ' fps';
+      frameCount = 0;
+      lastFpsTime = now;
+    }
+    fpsInterval = requestAnimationFrame(countFrame);
+  }
+  fpsInterval = requestAnimationFrame(countFrame);
+}
+
+function stopFpsTracker() {
+  if (fpsInterval) { cancelAnimationFrame(fpsInterval); fpsInterval = null; }
+}
+
+function updateResolutionInfo() {
+  video.addEventListener('loadedmetadata', () => {
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    const resStr = w + '×' + h;
+    document.getElementById('stat-res').textContent = resStr;
+    document.getElementById('info-res').textContent = resStr;
+  });
+}
+
+// ─────────────────────────────────────────────
+// Controls
+// ─────────────────────────────────────────────
+function copyCode() {
+  navigator.clipboard.writeText(sessionCode).then(() => {
+    showToast('✅ Code copied to clipboard!', 'success');
+  }).catch(() => {
+    // fallback
+    prompt('Copy this session code:', sessionCode);
+  });
+}
+
+function takeSnapshot() {
+  if (!video.srcObject) { showToast('No stream connected yet.', 'error'); return; }
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const link = document.createElement('a');
+  link.download = 'phonecam-snapshot-' + Date.now() + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast('📸 Snapshot saved!', 'success');
+}
+
+function toggleMirror() {
+  isMirrored = !isMirrored;
+  video.style.transform = isMirrored ? 'scaleX(-1)' : '';
+  showToast(isMirrored ? '🔄 Mirror: On' : '🔄 Mirror: Off');
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.querySelector('.video-area').requestFullscreen();
+    document.getElementById('fullscreen-btn').textContent = '⛶';
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+function disconnect() {
+  if (call) { call.close(); call = null; }
+  onDisconnected();
+}
+
+function resetConnection() {
+  document.getElementById('reconnect-overlay').classList.remove('visible');
+  if (call) { call.close(); call = null; }
+  video.srcObject = null;
+  video.classList.remove('active');
+  waitingScreen.style.display = 'flex';
+  stopFpsTracker();
+  init();
+}
+
+// ─────────────────────────────────────────────
+// Toast
+// ─────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = type; }, 3000);
+}
+
+// ─────────────────────────────────────────────
+// Boot
+// ─────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

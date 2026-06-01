@@ -1,0 +1,1350 @@
+--- PAGE 1 ---
+ELECTRONIC PRINCIPLES
+AND DEVICES (4-0-0-4-4)
+(UE25EC141B)
+Department of Electronics and Communication
+Engineering
+
+--- PAGE 2 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Course Content
+Department of Electronics and Communication.
+
+--- PAGE 3 ---
+Electronic Principles and Devices
+Course Content
+Unit 1: Semiconductor DIODE
+Unit 2: Diode applications
+Unit 3: Transistors and Operational Amplifiers
+Unit 4: Digital Electronics
+
+--- PAGE 4 ---
+Electronic Principles and Devices - UNIT 1
+ Semiconductor diode under Forward and Reverse bias
+ Shockley’s equation
+ Zener and Avalanche breakdown
+ Temperature effects
+ Ideal versus Practical diode
+ Diode resistances
+ Diode equivalent circuits
+
+--- PAGE 5 ---
+Electronic Principles and Devices - UNIT 1
+ Series diode configurations
+ Parallel and Series-Parallel configurations
+ Logical operations using diode
+ Diode Clippers and Clampers
+
+--- PAGE 6 ---
+Electronic Principles and Devices
+UNIT 2
+ Block diagram of regulated power supply
+ Half-wave, Full-wave and bridge rectifier, Ripple factor and Peak inverse
+voltage derivations
+ Shunt capacitor filter-working, output waveform and ripple factor
+equation.
+ Zener diode characteristics
+ Zener diode voltage regulator
+ Assignment (Write-up)
+
+--- PAGE 7 ---
+Electronic Principles and Devices
+UNIT 3
+ Transistors: Construction, operation
+ Transistor configurations - Common base and common emitter
+configurations – input and output characteristics.
+ Transistor amplifying action.
+ Limits of operation, Operating point.
+ Biasing circuits: Fixed bias, Emitter bias, Voltage divider bias
+ Bias circuit design, Bias stabilization
+ Single stage CE Amplifier.
+
+--- PAGE 8 ---
+Electronic Principles and Devices
+UNIT 3
+ Op-Amp: Introduction, Op-Amp Basics
+ Ideal voltage transfer curve
+ Op-Amp parameters and its values for Op-Amp 741 – Input and output offset voltages,
+Input and output resistances, Gain-Bandwidth product (GBW), Slew Rate, Common Mode
+Rejection Ratio (CMRR) (Definitions and significance only), Ideal Op-amp
+ Negative feedback.
+ Practical Op-Amp circuits: Inverting Amplifier, Non-inverting Amplifier, Voltage follower,
+Summing Amplifier, Constant Gain Amplifier, Voltage Subtraction, Comparator.
+ Simulation Lab: Banana Problem
+
+--- PAGE 9 ---
+Electronic Principles and Devices
+UNIT 4
+ Number Systems – binary, decimal, and hexadecimal
+ Binary Addition and Subtraction
+ 2’s complement subtraction
+ Boolean Algebra
+ Logic gates
+ Basic Theorem and Properties of Boolean Algebra
+ Boolean Functions
+
+--- PAGE 10 ---
+Electronic Principles and Devices
+UNIT 4
+ Canonical and Standard Form
+ Other Logical Operations
+ Combinational Logic Circuits: Half Adder and Full adder
+ Sequential Circuits: Flip-Flops-RS, D, T, JK
+ Registers: SISO
+ Counters: 3-Bit Asynchronous counter
+ Simulation/Hardware Lab: Orange Problem
+
+--- PAGE 11 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+• Text book for UNIT 1, 2 and 3
+https://kolegite.com/EE_library/books_and_lectures/%D0%95%D0%BB%D0%B5%D0%BA%D1%8
+2%D1%80%D0%BE%D0%BD%D0%B8%D0%BA%D0%B0/Electronic%20Devices%20and%20Circ
+uit%20Theory%20-%2011th%20Edition.pdf
+
+--- PAGE 12 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+• Text book for UNIT 4
+https://archive.org/details/digital-design-5th-edition-m-morris-mano-and-michael-d-ciletti
+
+--- PAGE 13 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Unit 1 - Semiconductor Diodes
+
+--- PAGE 14 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+An Introduction to Semiconductor
+• Semiconductors are a special
+class of elements having a
+conductivity between that of a
+good conductor and that of an
+insulator.
+• The three semiconductors used
+most frequently in the construction
+Atomic number Atomic number
+of silicon=14 of germanium=32 of electronic devices are Ge, Si,
+1s22s22p63s23p2 1s22s22p63s23p63d104s24p2. and GaAs.
+
+--- PAGE 15 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+An Introduction to Semiconductor
+
+--- PAGE 16 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+An Introduction to Semiconductor
+• The term intrinsic is applied to any
+semiconductor material that has been
+carefully refined to reduce the number of
+impurities to a very low level—
+essentially as pure as can be made
+available through modern technology.
+• A semiconductor material that has been
+subjected to the doping process is
+called an extrinsic material.
+
+--- PAGE 17 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+An Introduction to Semiconductor
+An n -type material is created by introducing impurity
+elements that have five valence electrons (pentavalent),
+such as antimony, arsenic , and phosphorus.
+The p-type material is formed by doping with impurity
+atoms having three valence electrons( trivalent), such
+as boron , gallium , and indium.
+
+--- PAGE 18 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Introduction to Semiconductors
+A semiconductor material that has been subjected to the
+doping process is called an extrinsic material.
+Both n -type and p -type materials are formed by adding a
+predetermined number of impurity atoms to a silicon base.
+An n -type material is created by introducing impurity elements that
+have five valence electrons ( pentavalent ), such as antimony ,
+arsenic , and phosphorus.
+Diffused impurities with five valence electrons are called
+donor atoms.
+
+--- PAGE 19 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Introduction to Semiconductors
+The p -type material is formed by doping a pure germanium or
+silicon crystal with impurity atoms having three valence electrons.
+The elements most frequently used for this purpose are boron,
+gallium , and indium.
+The diffused impurities with three valence electrons are called
+acceptor atoms.
+
+--- PAGE 20 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+An Introduction to Semiconductor Diode
+Diode : Two – electrodes
+ We can construct our first solid-state electronic
+device: The semiconductor diode by sandwiching p-
+type and n-type material together to form a depletion
+region between the two.
+ It is fabrication of one material with a majority carrier
+of electrons to one with a majority carrier of holes.
+Biasing of diodes :
+ Forward Bias: A material type connected to the same
+polarity terminal of the voltage source
+ Reverse Bias: A material type connected to the
+opposite polarity terminal of the voltage source
+
+--- PAGE 21 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Diode operation under different biasing conditions
+No – bias condition:
+ At the instant the two materials are “joined” the
+electrons and the holes in the region of the junction
+will combine, resulting in a lack of free carriers in the
+region near the junction, as shown in Fig.
+ Note in Fig. that the only particles displayed in this
+No bias
+In the absence of an applied bias region are the positive and the negative ions
+across a semiconductor diode, the
+net flow of charge in one direction remaining once the free carriers have been absorbed.
+is zero.
+ This region of uncovered positive and negative ions
+is called the depletion region due to the “depletion”
+of free carriers in the region.
+
+--- PAGE 22 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Diode operation under different biasing conditions
+Forward – bias condition
+ A forward-bias or “on” condition is established by
+applying the positive potential to the p-type material
+and the negative potential to the n-type material as
+shown in Fig.
+ The application of a forward-bias potential V will
+D
+“pressure” electrons in the n-type material and holes in
+Forward Bias
+The current that exists under the p-type material to recombine with the ions near
+forward-bias conditions is called
+the boundary and reduce the width of the depletion
+the forward-bias current and is
+represented by I .
+D region as shown in Fig.
+
+--- PAGE 23 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Diode operation under different biasing conditions
+Reverse – bias condition:
+ When a P-N junction is reverse-biased as shown in Fig., the
+number of uncovered positive ions in the depletion region of
+the n-type material will increase due to the large number of
+free electrons drawn to the positive potential of the applied
+voltage.
+ For similar reasons, the number of uncovered negative ions
+Reverse Bias
+will increase in the p-type material.
+The current that exists under
+ The net effect, therefore, is a widening of the depletion
+reverse-bias conditions is called
+the reverse saturation current
+region. This widening of the depletion region will establish too
+and is represented by I .
+s
+great a barrier for the majority carriers to overcome,
+effectively reducing the majority carrier flow to zero.
+
+--- PAGE 24 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Semiconductor Diode’s Characteristics & Parameters
+From the characteristics curve of a
+semiconductor diode the following
+regions and parameters have been
+observed under,
+Forward Bias
+• Knee Voltage
+• Forward Current Rating
+• Maximum Power Dissipation
+Reverse Bias
+• Reverse Saturation Current
+• Break down Voltage
+• Peak Inverse Voltage Rating
+
+--- PAGE 25 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Diode’s Current Expression (Shockley's Current Equation)
+Shockley’s Equation also called the
+diode equation helps us determine
+the current at a given temperature
+knowing the diode voltage and
+saturation current. k = 1.38 x10-23 Joule/Kelvin.
+q=1.6 × 10−19 coulomb
+
+--- PAGE 26 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Diode’s Current Expression (Shockley's Current Equation)
+
+--- PAGE 27 ---
+ELECTRONIC PRINCIPLES AND DEVICES – UE20EC101
+UNIT - I: Numerical on Diode’s Current Equations
+Q. No 1. Calculate the thermal voltage when the temperature is 25°C
+Solution:
+k = 1.38 x10-23 Joule/Kelvin.
+Thermal voltage V =k T/q
+T
+q=1.6 × 10−19 coulomb
+Where k is the Boltzmann constant and q is the charge of
+electron. This can be reduced to
+V = T/11600 because q/k=11600
+T
+Therefore, V = 298/11600 = 0.0257V
+T
+V = 25.7mV
+T
+
+--- PAGE 28 ---
+ELECTRONIC PRINCIPLES AND DEVICES – UE20EC101
+UNIT - I: Numerical on Diode’s Current Equations
+Q.No.2 Calculate the forward bias current of a Si diode when
+forward bias voltage of 0.4V is applied, the reverse saturation
+current is 1.17×10-9A and the thermal voltage is 25.2mV.
+Solution: wher , I = reverse saturation current
+s
+η = ideality factor, V = thermal voltage, V = applied voltage
+D
+T
+Since in this question ideality factor is not mentioned it can be
+taken as one.
+I = 1.17 x 10-9A, V = V =k T/q =0.0252V, η = 1, V = 0.4V
+D
+s T T
+Therefore, I = 1.17×10-9x(e0.4/0.0252 -1)
+D
+I = 9.156mA.
+D
+
+--- PAGE 29 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Numerical on Diode’s Current Equations
+Q. No 3 Given a diode current of 8 mA and η =1, find the reverse saturation
+current (I ) if the applied voltage is 0.5 V and the room temperature is 25°C.
+s
+Solution: Equation for diode current (Shockley’s Equation)
+Given: I = diode current = 8 mA, η = ideality factor = 1, V = Applied voltage = 0.5V
+D D
+We have to find V = Thermal voltage and Reverse saturation current I
+T S
+
+--- PAGE 30 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Numerical on Diode’s Current Equations
+Q. No 4: Calculate the applied voltage V , if diode current is 6 mA, Thermal
+D
+Voltage is 26 mV, Ideality factor is 1, and Reverse saturation current is 1 nA.
+Solution:
+Given: I = 6 mA, V = 26 mV, η = 1, I = 1 nA, V = Applied voltage = ………V
+D T S D
+Equation for diode current (Shockley’s Equation)
+
+--- PAGE 31 ---
+ELECTRONIC PRINCIPLES AND DEVICES – UE20EC101
+UNIT - I: Numerical on Diode’s Current Equations
+Q. No 5 Consider a silicon diode with η=1.2. Find change in
+voltage if the current changes from 0.1mA to 10mA.
+Solution: Equation for diode current I=I ×(e(V/ηV )-1)
+0 T
+Where I = reverse saturation current, η = ideality factor
+0
+V = thermal voltage, V = applied voltage
+T
+η = 1.2, I = 10mA, I = 0.1mA and take V = 0.026V
+2 1
+T
+
+--- PAGE 32 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Comparison of diode characteristics of Ge, Si, and GaAs
+
+--- PAGE 33 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Types of Diode Breakdown
+• Avalanche breakdown : In the reverse
+bias condition as the voltage increases
+the free charge carriers obtain velocity
+and associated kinetic energy and
+release additional carriers through
+collision with other atomic structures.
+• Hence Covalent bonds are broken and
+electron–hole are generated.
+• These charge carriers acquire energy
+from the applied potential and produce
+more and more free charge carriers. This
+cumulative process is called Avalanche
+multiplication or ionization process.
+
+--- PAGE 34 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Types of Diode Breakdown
+• Zener breakdown : Zener break down
+occurs when both P and N type material
+are heavily doped in a semiconductor
+diode. Hence the depletion layer region
+is narrow down.
+• When a small reverse bias voltage is
+applied across a diode a very strong
+electric fied is produced.
+• Due to this electric field covalent bond
+breaks and produces large number of
+free charge carriers.
+
+--- PAGE 35 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Types of Diode Breakdown
+
+--- PAGE 36 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Temperature Effects on V-I Characteristics of a Diode
+• The Effect of variation in temperature across a semiconductor diode is
+observed both in the forward as well as in reverse characteristics.
+• Rise in temperature generates more electron-hole pair thus
+conductivity increases and thus increases in current.
+• PN junction diode parameters like reverse saturation current, bias
+current, reverse breakdown voltage and barrier voltage are dependent
+on temperature.
+• Increase in the temperature increases carrier concentration. As a
+result, knee voltage decreases & breakdown voltage increases while
+reverse saturation current increases.
+
+--- PAGE 37 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Temperature Effects on V-I Characteristics of a Diode
+• Under Forward Bias the Change in Temperature across the diode: Barrier
+voltage is dependent on temperature hence it decreases by 2.5mV/ °C rise
+in temperature for both germanium and silicon.
+• Under Reverse Bias the Change in Temperature across the diode: Reverse
+saturation current (I ) of diode increases with increase in the temperature.
+S
+The rise is 7%/°C for both germanium & silicon and approximately doubles
+for every 10°C rise in temperature.
+• Reverse breakdown voltage (V ) also increases as the temperature
+R
+increases
+
+--- PAGE 38 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Temperature Effects on V-I Characteristics of a Diode
+
+--- PAGE 39 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+An Example - Temperature Effects on A Semiconductor diode
+Example: The Reverse saturation current of silicon diode at 20°C is 0.1µA.
+Determine its value if the temperature is increased by 40 °C .
+ANS:
+o
+Given Data at T  20 C : I  0.1A
+s
+o
+T  30 C : I  0.2A
+s
+o
+T  40 C : I  0.4A
+s
+o
+T  50 C : I  0.8A
+s
+o
+T  60 C : I  1.6A
+s
+
+--- PAGE 40 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Temperature Effects on A Semiconductor diode
+1. The reverse saturation current Is will double in magnitude for
+every 10°C increase in temperature.
+.
+2. The Knee voltage shifts to the left at a rate of 2.5mV per degree
+centigrade increase in temperature
+
+--- PAGE 41 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Temperature Effects: Numerical
+Q No 1. The knee voltage of a Si diode is 0.7V and its reverse Saturation current
+is 20nA at 25oC. Determine these values at 40oC.
+Solution:
+.
+Knee voltage shift left at a rate of 2.5mV per centigrade degree increase in temperature.
+Therefore for a Change in temperature is = 40oC-25oC =15oC
+Change in knee voltage will be =2.5mV X 15= 0.0375V
+Hence V at 40oC = 0.7-0.0375= 0.6625 V,
+K
+Reverse Saturation Current doubles for every 10oC rise in Temperature
+I at 40oC = 2(40-25/10) X 20nA = 2.82X20nA = 56.56nA.
+S
+
+--- PAGE 42 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Temperature Effects: Numerical
+Q No 2. The reverse saturation current of a Germanium diode is 200µA at room
+temperature of 27oC. Calculate the current in forward biased condition, if
+forward biased voltage is 0.2V at room temperature. If temperature is increased
+.
+by 30oC, calculate the reverse saturation current and the forward current for the
+same forward voltage at new temperature.
+Solution: k = 1.38 x10-23 Joule/Kelvin.
+V = kT/q= 25.9mV
+q=1.6 × 10−19 coulomb
+T
+I =I ×(e(V /ηV ) -1)= 200µA x e(0.2/0.0259) =0.451A
+D D
+s T
+If the temperature is increased by 30oC New temperature is 27+30= 57oC
+Therefore Is= 200µ X2^3= 1600 μA therefore at new V at 57oC is 28.4mV
+T
+Hence I at 57oC = 1.83A.
+D
+
+--- PAGE 43 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Temperature Effects: Numerical
+Q No 3. A Ge diode has a reverse saturation current of 5µA at temperature 300K
+find diode current at 40oC . When forward bias voltage is 0.27.
+Solution:
+.
+k = 1.38 x10-23 Joule/Kelvin.
+Given Is at 27oC is 5µA
+q=1.6 × 10−19 coulomb
+Therefore, I at 40oC is = 5µ x 2(40-27/10)
+s
+= 5µ X 2.462
+=12.31 µ A
+Hence V at 40oC = kT/q= 26.9mV
+T
+Therefore I =I ×(e(VD/ηV ) -1)= 12.31µA x e(V /ηV ) = 281.49mA
+D D
+s T T
+
+--- PAGE 44 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Temperature Effects: Numerical
+Q No 4. The reverse saturation current of a Si diode is 2pA at 27oC. Determine
+the forward biased voltage across the diode at 57oC, if the forward current
+through the diode at 57oC is 50mA.
+Solution:
+.
+Reverse saturation current doubles for every 10oC rise in temperature
+Hence at if reverse saturation current at 27oC is 2pA
+k = 1.38 x10-23 Joule/Kelvin.
+Then reverse saturation current at 37oC is 4pA
+Then reverse saturation current at 47oC is 8pA
+q=1.6 × 10−19 coulomb
+Then reverse saturation current at 57oC is 16pA
+Therefore V 57oC is =k x 330/q= 28.42mV
+T
+Hence by using I =I ×(e(V /ηV ) -1) = 50mA
+D D
+s T
+50/16= eV /ηV ln(50/16)=V /28.42m  V = 0.686V at 57oC.
+D D
+T D
+
+--- PAGE 45 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Temperature Effects: Numerical
+Q No 5. The reverse saturation current of a Germanium diode is 100µA at room
+temperature of 28oC. Calculate the current in forward biased condition, if
+forward biased voltage is 0.3V at room temperature. If temperature is
+.
+increased by 25oC, calculate the reverse saturation current and the forward
+current for the same forward voltage at new temperature.
+Solution:
+V = kT/q= 25.9mV
+T
+I =I ×(e(V /ηV ) -1)
+D D
+s T
+If the temperature is increased by 28oC New temperature is 28+25= 53oC
+Therefore I = 100µ X22.5= 565.68 μA. Therefore, new V at 53oC is 28.117 mV
+s T
+Hence I at 53oC = 24.31 A.
+D
+
+--- PAGE 46 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Ideal and Practical Diode Characteristics:
+Ideal Diode: When an ideal diode is
+forward biased, it offers no
+resistance & acts like a closed
+switch. Likewise, the ideal diode
+under reverse bias offers infinite
+resistance hence, it acts like open
+switch.
+Practical Diode: A diode which is said
+to be forward biased it starts
+conducting at knee voltage & under
+reverse bias no current due to
+majority charges hence a practical
+diode is considered to be open switch
+(minority charges current ignored). For Si, V = 0.7V
+K
+
+--- PAGE 47 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Diode Resistances
+• An actual diode offers a very small resistance (not zero) when
+forward biased and is called a forward resistance
+• Whereas, it offers a very high resistance (not infinite) when
+reverse biased and is called as a reverse resistance
+• Type of applied voltage or signal will define
+the following resistance levels
+i. DC or Static Resistance
+ii. AC or Dynamic Resistance
+iii. Average AC Resistance
+
+--- PAGE 48 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+DC or Static Resistance
+• The application of a dc voltage to a circuit containing a semiconductor diode
+will result in an operating point on the semiconductor diode characteristic
+curve.
+• Finding the corresponding levels of V and I at particular operating point
+D D
+gives the DC resistance.
+• Typically, the dc resistance of a diode in:
+Forward bias : 10 Ω to 80 Ω
+Reverse Bias: 10 MΩ
+
+--- PAGE 49 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+AC or Dynamic Resistance
+• The application of a small AC voltage to a circuit containing a semiconductor
+diode offers AC resistance.
+• A straight line drawn tangent to the curve through the Q –point will define a
+particular change in voltage and current determines the ac or dynamic resistance
+for this region of the diode characteristics.
+
+--- PAGE 50 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+AC or Dynamic Resistance
+• Dynamic resistance can be found simply by substituting the quiescent value of
+the diode current into the equation also
+• Where, r is bulk or body resistance
+B
+•Typically, the ac resistance of a diode in the active region will range from 1 Ω to
+100 Ω.
+
+--- PAGE 51 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Average AC Resistance
+• If applied input signal is sufficiently large to produce a broad swing and
+the resistance determined by a straight line drawn between the two
+intersections established by the maximum and minimum values of input
+voltage is called Average AC Resistance
+
+--- PAGE 52 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Summary of Resistances
+
+--- PAGE 53 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Diode Resistance: Numerical
+Q No 1. For the characteristics of Fig:
+(a) Determine the ac resistance at ID 2 mA.
+(b) Determine the ac resistance at ID 25 mA.
+(c) Compare the results of parts (a) and (b) to the dc resistances at each current level.
+.
+a) c)
+b)
+
+--- PAGE 54 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Diode Resistance: Numerical
+Q No 2. Derivation of an expression for AC or Dynamic Resistance:
+Solution: The derivative of a function at a point is equal to the
+slope of the tangent line drawn at that point.
+.
+
+--- PAGE 55 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Diode Resistance: Numerical
+Q No 3. Calculate the DC and AC resistance for the diode shown in the Figure
+given below, at a forward current of 10 mA and also compare their
+magnitudes.
+.
+
+--- PAGE 56 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Diode Resistance: Numerical
+Q No 4. Find the piecewise-linear equivalent circuit for the diode shown in the Fig.
+given below. Use a straight line segment that intersects the horizontal axis at 0.7 V
+and best approximates the curve for the region greater than 0.7 V.
+.
+
+--- PAGE 57 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Diode Resistance: Numerical
+Q No 5. Determine the DC resistance levels for the diode of Fig. given below at
+(a) I =2 mA (b) I =20 mA (c) V = -10 V
+D D D
+.
+
+--- PAGE 58 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Diode Equivalent circuits /Diode Approximations
+• Diode approximation is a mathematical method used to
+approximate the nonlinear behavior of real diodes to
+enable calculations and circuit analysis.
+• There are three different approximations used to analyze
+the diode circuits, namely
+I. Piecewise-linear equivalent Circuit
+II. Simplified Diode Characteristics
+III. Ideal Diode Characteristics
+
+--- PAGE 59 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Piece-Wise Linear Diode Characteristics
+• Under forward – bias, the diode behaves as a practical voltage source with the magnitude equal to
+the knee voltage in series with the the diodes average ac resistance.
+• Under reverse – bias, the diode is an open switch and no current flows through it.
+• Characteristics resemble closely to that of practical diode.
+• The voltage drop across the diode is calculated using the formula V = V + I *R
+d B d B
+Note V = Knee voltage
+B
+
+--- PAGE 60 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Simplified Diode Characteristics
+• Under forward-bias, the diode turns ON when a voltage of V or V is applied across it. It turns off
+K B
+if the applied voltage is less than V . Thus, the diode is represented by a voltage of V in series with
+K K
+a closed switch. Therefore, V = V
+d B
+• Under reverse bias, it is an open switch.
+Note V = Knee voltage
+B
+
+--- PAGE 61 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Ideal diode Characteristics
+• The diode is considered as a closed switch with zero voltage drop when
+forward-biased (V = 0) and as an open switch when reverse biased
+d
+
+--- PAGE 62 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Diode Configuration with a resistor
+• It’s assumed that the forward resistance of the diode is
+usually so small compared to the other series elements
+of the network that it can be ignored.
+• In general, a diode is in the “on” state if the current
+established by the applied sources is such that its
+direction matches that of the arrow in the diode symbol
+and the applied voltage across diode (V ) is:
+D
+• Silicon Diode: V ≥ 0.7 V
+D
+• Germanium Diode: V ≥ 0.3 V
+D
+• Gallium Arsenide: V ≥ 1.2 V
+D
+
+--- PAGE 63 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Diode Configuration with a resistor
+Forward Bias Analysis
+(using simplified equivalent)
+• V = 0.7 V (or V = E if E < 0.7 V)
+D D
+• V = E – V
+R D
+• I = I = I = V / R
+D R T R
+Reverse Bias Analysis
+• V = E;
+D
+• V = 0 V &
+R
+• I = 0 A
+D
+
+--- PAGE 64 ---
+ELECTRONIC PRINCIPLES AND DEVICES – UE20EC101
+Series Diode Configuration – A Solved Problem
+1. Determine Vout and Id for the given series diode Circuit.
+Assume the LED Voltage as 1.8 V.
+Solution: Re-draw the given circuit based on
+simplified diode’s configuration, we get
+
+--- PAGE 65 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Parallel Diode Configuration - A Solved Problem
+2. Determine Vo , I , I , and I for the parallel diode configuration of
+1 D1 D2
+Figure below
+Solution:
+
+--- PAGE 66 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series-Parallel Diode Configuration
+3. Determine I , I , and I for the series- parallel diode configuration of
+1 2 D2
+Figure below
+
+--- PAGE 67 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series-Parallel Diode Configuration – An Exercise Problem
+
+--- PAGE 68 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Diode Configuration – A Solved Problem
+4. Determine V and I for the given series diode Circuit. Assume the LED
+out d
+Voltage as 1.8 V.
+Solution: Re-draw the given circuit based on
+simplified diode’s configuration, we get
+
+--- PAGE 69 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Diode Configuration
+5. Determine I , V and V
+D D2 o
+Solution: Re-draw the given circuit based on simplified
+diode’s configuration, we get
+
+--- PAGE 70 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Diode Configuration
+
+--- PAGE 71 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Diode Configuration
+6 . D etermine I, V , V and V
+1 2 0
+
+--- PAGE 72 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Diode Configuration
+
+--- PAGE 73 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Diode Configuration
+7. Determine the current I for each of the configurations
+
+--- PAGE 74 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Diode Configuration
+8. Determine V and I for the networks
+0 D
+
+--- PAGE 75 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Diode Configuration
+9. Determine the level of V for each network
+0
+
+--- PAGE 76 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Diode Configuration
+10. Determine V and V for the circuits
+01 02
+
+--- PAGE 77 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Parallel Diode Configuration - A Solved Problem
+11. Determine I for the parallel diode configuration of Figure below
+Solution:
+
+--- PAGE 78 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Parallel Diode Configuration - A Solved Problem
+13. Determine I and V for the circuits shown
+D 0
+
+--- PAGE 79 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Parallel Diode Configuration - A Solved Problem
+14. Determine I and V for the circuits shown
+0
+
+--- PAGE 80 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Parallel Diode Configuration - A Solved Problem
+15. Determine I, V and V
+01 02
+
+--- PAGE 81 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Logical Operations
+Logical operation:
+It is an Operation that acts on binary numbers to
+p roduce a result according to the Laws of Boolean
+Logic.
+A
+A Logic Gate is a basic building block of Digital circuits.
+Y
+F(A,B)
+L ogic gate is considered as a device that has the ability B
+to produce one output level with the combinations of
+input levels.
+Example : AND,OR and NOT functions
+
+--- PAGE 82 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Logical Operations
+Logical operations:
+Logic gates are implemented by using diodes, transistors, and by other
+se veral devices.
+Hence logic gates can also be considered as electronic circuits.
+The logic gates obtained by Diode is called Diode Resistor Logic.
+Inputs and outputs of logic gates are in two levels which are termed as
+HIGH and LOW, or TRUE and FALSE, or ON and OFF, or simply 1 and 0.
+
+--- PAGE 83 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Logical Operations
+For all logic gates a Table with all combinations is listed out.
+The combination of the input variables and the corresponding
+output is termed as “TRUTH TABLE”.
+It explains how the logic circuit output responds to various
+combinations of logic levels at the inputs.
+AND Operation is explained by the following Truth Table
+A B Y=A.B
+A B
+0 0 0
+0 1 0
+1 0 0
+1 1 1
+
+--- PAGE 84 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Logical Operations
+An AND / OR gate may also have two or more inputs but
+produces only one output.
+AND gate produces an output of logic 1 state when all of its
+inputs is in logic 1 state and produces an output of logic 0 state
+if any of its inputs are in logic 0 state.
+AND Operation is explained by the following Truth Table
+A B Y=A.B
+A B
+0 0 0
+0 1 0
+1 0 0
+1 1 1
+
+--- PAGE 85 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Logical Operations
+An AND / OR gate may also have two or more inputs but produces only
+one output.
+OR gate produces an output of logic 1 state even if any of its inputs is in
+logic 1 state and produces an output of logic 0 state if all of its inputs are
+in logic 0 state.
+O R Operation is explained by the following Truth Table
+A B Y=A+B
+A B
+0 0 0
+0 1 1
+1 0 1
+1 1 1
+
+--- PAGE 86 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Logical Operations
+OR Operation Illustrated using Diode
+A (V1) B(V2) Y (Vo)
+0 0 0
+0 10 V 9.3 V
+10 V 0 9.3 V
+10 V 10 V 9.3V
+
+--- PAGE 87 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Logical Operations
+AND Operation Illustrated using Diode
+A (V1) B(V2) Y(Vo)
+0 0 0.7 V
+0 10 V 0.7V
+10 V 0 0.7V
+10 V 10 V 10V
+
+--- PAGE 88 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Clippers - Classification
+Clippers
+Series Parallel
+Unbiased Biased Unbiased Biased
+Series Series Parallel Parallel
+
+--- PAGE 89 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Clippers
+• The series configuration is defined as one where the diode is in series with
+the load.
+• Fig.1(a) shows the circuit of a series clipper.
+• The response of the series configuration of Fig. 1(a) to a variety of alternating
+waveforms is shown in Fig. 1(b).
+• There are no boundaries on the type of signals that can be applied to a
+clipper.
+Fig. 1(a): Series Unbiased
+Fig. 1(b): Input-output Waveforms
+Clipper
+
+--- PAGE 90 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Clippers
+• Fig.2 shows the series clipper with DC
+supply. This configuration is called as
+biased series clipper.
+• The addition of a dc supply to the
+network as shown in Fig. 2 can have a
+pronounced effect on the analysis of the
+series clipper configuration.
+• The dc supply can be in the leg between
+Fig. 2: Series clipper with DC supply
+the supply and output or in the branch
+parallel to the output.
+• The output response is not as obvious
+because the dc supply can aid or work
+against the source voltage.
+
+--- PAGE 91 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Clippers
+General instructions for analysis:
+1. Take careful note of where the output voltage is defined.
+2. Try to develop an overall sense of the response by simply noting the that
+how the input supply affects the conventional current direction through the
+diode.
+Fig. 2: Series clipper
+with DC supply
+
+--- PAGE 92 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Clippers
+3. Determine the “transition voltage” that will result in a change of
+state for the diode from the “OFF” to the “ON” state.
+• Note the substitution of the short-circuit equivalent for the ideal diode in Fig 3, and
+the fact that the voltage across the resistor is 0 V because the diode current is 0
+mA. The result is v -V = 0 or v = V is the applied (transition) voltage.
+i i
+• This permits drawing a line on the sinusoidal supply voltage as shown in Fig. 4 to
+define the regions where the diode is on and off.
+Fig.4: Define
+the “ON” and
+“OFF” regions.
+Fig. 3: Determining applied voltage for
+the circuit
+
+--- PAGE 93 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Clippers
+• For the “ON” region, as shown in Fig. 5, the output voltage is
+defined by-
+• v v
+= – V ………………… (1)
+o i
+• For the “OFF” region, the diode is an open circuit, I = 0 mA,
+D
+and the output voltage is
+• v = 0 V …………………..(2)
+o Fig. 5: Determining
+4. It is often helpful to draw the output v for the diode in
+o
+the “ON” state.
+waveform directly below the applied voltage
+using the same scales for the horizontal axis and
+the vertical axis.
+Fig. 6: Sketching
+the waveform of
+• For the “ON” condition, Eq. (1) can be used to find the output
+v above and
+voltage when the applied voltage has its peak value: o
+below the
+• v
+= V – V ………………..(3) transition level.
+o_peak m
+• Output voltage, v is plotted in the Fig. 6.
+o
+
+--- PAGE 94 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Clippers
+EXAMPLE 1: Determine the output waveform for the sinusoidal input of Fig. 7.
+Step 1: The output is directly across the resistor R.
+Step 2: The positive region of v and the dc supply are
+i
+both working in same direction to turn the diode “ON”.
+The result is that we can safely assume the diode is in
+the “on” state for the entire range of positive voltages
+for v .
+i Fig. 7
+Once the supply goes negative, it would have
+to exceed the dc supply voltage of 5 V before it could
+turn the diode “OFF”.
+Step 3: The transition model is substituted in Fig. 8,
+and we find that the transition from one state to the
+other will occur when,
+v + 5V = 0V
+i Fig. 8
+Or v = -5V …………….(1)
+i
+
+--- PAGE 95 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Clippers
+EXAMPLE 1 (cont…..)
+Step 4: In Fig. 9 horizontal line is drawn through
+the applied voltage at the transition level.
+For voltages less than 5V the diode is in
+the open-circuit state and the output is 0 V, as
+v
+shown in the sketch of .
+o
+Using Fig. 9 , we find that for conditions
+when the diode is on and the diode current is
+established the output voltage will be the
+following, as determined using Kirchhoff’s voltage Fig. 9
+law:
+v v
+= + 5V …………..(2)
+o i
+Note: The analysis of clipper networks with square-wave
+inputs is actually easier than with sinusoidal inputs
+because only two levels have to be considered.
+
+--- PAGE 96 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Series Clippers
+EXAMPLE 2: Find the output voltage for the network examined in previous Example, if
+the applied signal is the square wave of Fig. 10.
+• For v = 20 V (0  T/2) the network of Fig. 11
+i
+results. The diode is in the short-circuit state i.e.
+“ON”, and
+v
+= 20 V + 5 V = 25 V …………………(1)
+o
+• For v = -10 V (T/2  T) the network of Fig. 12,
+i
+results, moving the diode in the “OFF” state, and
+Fig. 10
+v i
+= R = (0)R = 0 V …………………..(2)
+o R
+• The resulting output voltage appears in Fig. 13.
+Fig. 11 Fig. 12 Fig. 13
+
+--- PAGE 97 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Parallel Clippers without bias
+• In parallel clippers, diode is connected in parallel
+with the load.
+• The analysis of parallel configurations is very
+similar to that of series configurations.
+• The simplest parallel clipper is shown in Fig 14.
+Fig. 14: Parallel Clipper
+Fig. 15: Response to a parallel clipper.
+
+--- PAGE 98 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Parallel Clippers with Bias
+EXAMPLE 3: Determine v for the network of Fig. 16.
+o
+• When the diode is in its short-circuit i.e. “ON” state the output voltage will be directly across
+the 4-V dc supply, requiring that the output be fixed at 4 V. In other words, when the diode is
+“ON” the output will be 4 V.
+• When the diode is an open circuit i.e. “OFF” state, the current through the series network will
+be 0 mA and the voltage drop across the resistor will be 0 V. That will result in v = v .
+o i
+Fig. 16
+
+--- PAGE 99 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Parallel Clippers
+Example 3 (cont….)
+• The transition level of the input voltage can be
+found from Fig. 17 by substituting the short-circuit
+equivalent and remembering the diode current is 0
+mA at the instant of transition.
+• The result is a change in state when v = 4 V
+i
+• In Fig. 18 the transition level is drawn along with v
+o
+= 4 V when the diode is “ON”.
+Fig. 17: Determining the
+transition level
+Therefore, for v >= 4 V, v = v …………………(1)
+i o i
+Fig. 18: Output Sketch
+And, for v <= 4 V, v = 4 V, ………………..……(2)
+i o
+
+--- PAGE 100 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Parallel Clippers
+EXAMPLE 4: Repeat Example 3, using a silicon diode with V = 0.7 V.
+K
+• Determine Transition voltage
+• Using the condition i = 0 A at v = V = 0.7 V
+d d D
+and obtaining the network of Fig. 19 .
+• Applying KVL, v + V - V = 0
+i K
+• or v = V - V = 4 V - 0.7 V = 3.3 V ………(1)
+i K
+• Diode will be “OFF”, for v > 3.3 V (in Fig. 19) and
+i Fig. 19: Determining the Fig. 20: Determining the
+• v = v ………………………………...….. (2) output v output v
+o i o o
+• Diode will be “ON”, for v < 3.3 V (in Fig. 20) and
+i
+• v
+= 4 V - 0.7 V = 3.3 V …………….….…(3)
+o
+• The resulting output waveform appears in Fig. 21 .
+• Note that the only effect of V was to drop the
+K
+transition level to 3.3 from 4 V.
+Fig. 21: Sketching v
+o
+
+--- PAGE 101 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Simple Series Clippers (Ideal Diodes)
+POSITIVE
+NEGATIVE
+
+--- PAGE 102 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Biased Series Clippers (Ideal diodes)
+POSITIVE
+NEGATIVE
+
+--- PAGE 103 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Simple Parallel Clippers (Ideal diodes)
+POSITIVE
+NEGATIVE
+
+--- PAGE 104 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Clampers
+• A clamper is a circuit with a diode, resistor, and
+capacitor that shifts a waveform to a new DC
+level without altering its shape.
+• Also known as DC restorer.
+• Clamping networks have a capacitor connected
+directly from input Fig.1: Clamper
+• Resistive element connected in parallel with the
+output signal.
+• The diode is also in parallel with the output
+signal but may or may not have a series dc
+supply as an added element.
+
+--- PAGE 105 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Steps used for analysis:
+Step 1: Examine the response of the portion of the input
+signal that will forward bias the diode.
+• For Fig. 2, the diode is forward biased during the
+positive portion of the signal.
+• The short-circuit equivalent for the diode results in
+Vo = 0 V for t = 0 to T/2 .
+Step 2: During the on period of the diode, assume that the
+capacitor will charge up instantaneously to a voltage Fig.2 Fig.3
+level determined by the surrounding network.
+Step 3: Assume the capacitor retains its voltage while the
+diode is "off."
+Step 4: Track the position and polarity of v o to ensure
+correct levels.
+• When the input turns negative, the network appears as
+in Fig. 3, with the diode as an open circuit and voltage
+stored across the capacitor.
+Step 5: Check that the total swing of the output matches
+that of the input. (see Fig. 4)
+Fig. 4
+
+--- PAGE 106 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Numerical
+Example1: Determine Vo for the network of shown below, for the input indicated in Fig. 1.1
+Solution:
+Note: f = 1000 Hz => time period, T= 1 ms
+Step 1: For t1→ t2 of the v since the diode is in its short-
+i
+circuit state. The network appears as shown in Fig. 1.2 .
+Step 2: The output is across R (also directly across the 5-V
+Fig. 1.1
+battery). So, v = 5 V.
+o
+Applying KVL around the input loop
+-20 V + V - 5 V = 0
+C
+and V = 25 V => the capacitor charges to 25 V.
+C
+Step 3: For the period t →t the network will appear as
+2 3
+shown in Fig. 1.3 .
+Fig. 1.2 : Determining V Fig. 1.3: Determining v
+o o
+Applying KVL around the outside loop of the network
+and V with the with the diode
+C
++10 V + 25 V - v = 0 diode in the “on” state. in the “off” state.
+o
+v = 35 V
+o
+
+--- PAGE 107 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Numerical
+Step 4: The time constant of the network of Fig. 1.3 is
+determined by the product RC and has the magnitude
+ζ = RC = (100 kΩ)(0.1 μF) = 0.01 s = 10 ms
+The total discharge time is: 5 ζ = 5(10 ms) = 50 ms
+Step 5: The resulting output appears in Fig. 1.4 with the input
+Fig. 1.4: Input and Output Waveform
+signal.
+Note: The output swing of 30 V matches the input swing.
+
+--- PAGE 108 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Numerical
+Example 2: Repeat example 1, using a silicon diode with V = 0.7 V.
+k
+Solution:
+For the short-circuit state, the network appears as in Fig. 2.1 , and v
+o
+is determined by KVL in the output section as:
++5 V - 0.7 V - v = 0
+o
+and v = 4.3 V
+o
+Fig.2.1
+For the input section, KVL results in
+-20 V + V + 0.7 V - 5 V = 0
+C
+and V = 24.3 V
+C
+For the period t →t the network will now appear as in Fig. 2.2 , with
+2 3
+the only change being the voltage across the capacitor.
+Applying KVL yields
++10 V + 24.3 V - v = 0
+o
+and v = 34.3 V
+o
+Fig.2.2
+
+--- PAGE 109 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Numerical
+The resulting output appears in Fig. 2.3 , verifying the
+statement that the input and output swings are the
+same.
+Fig. 2.3: Output Waveform
+
+--- PAGE 110 ---
+ELECTRONIC PRINCIPLES AND DEVICES
+Clamping Networks
+Input Waveform Clamping Circuit Output Waveform
+
+--- PAGE 111 ---
+THANK YOU
+Department of Electronics and Communication

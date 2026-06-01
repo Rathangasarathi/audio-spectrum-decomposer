@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Problem 2/50 — Forearm Moment Solver · Technical Blueprint</title>
+  <meta name="description"
+    content="Technical blueprint for an interactive forearm moment solver for Meriam & Kraige Problem 2/50, by Rathanga Parthasarathy." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a1a1a;
+      --ink-light: #444;
+      --rule: #c8b89a;
+      --accent: #7c4f1e;
+      --accent2: #2e5c8a;
+      --bg: #fdfaf6;
+      --paper: #ffffff;
+      --code-bg: #f5f0e8;
+      --margin: 72px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      background: #e8e0d5;
+    }
+
+    body {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 11.5pt;
+      line-height: 1.75;
+      color: var(--ink);
+      background: #e8e0d5;
+      padding: 40px 20px;
+    }
+
+    /* ── PAGE ── */
+    .page {
+      background: var(--paper);
+      max-width: 850px;
+      margin: 0 auto 60px;
+      padding: var(--margin) var(--margin) 80px;
+      box-shadow: 0 4px 40px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+
+    .page::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: linear-gradient(180deg, var(--accent), #b8892e);
+    }
+
+    /* ── COVER PAGE ── */
+    .cover {
+      text-align: center;
+      padding: 80px var(--margin) 60px;
+      border-bottom: 2px solid var(--rule);
+      margin-bottom: 48px;
+    }
+
+    .cover .label {
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      font-weight: 600;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 24px;
+    }
+
+    .cover h1 {
+      font-size: 2.6rem;
+      font-weight: 600;
+      line-height: 1.2;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+
+    .cover h1 em {
+      color: var(--accent);
+      font-style: italic;
+    }
+
+    .cover .subtitle {
+      font-size: 1.05rem;
+      color: var(--ink-light);
+      font-style: italic;
+      margin-bottom: 20px;
+    }
+
+    .title-rule {
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), #c8a050);
+      margin: 20px auto;
+      border-radius: 2px;
+    }
+
+    .cover-meta {
+      display: flex;
+      justify-content: center;
+      gap: 36px;
+      flex-wrap: wrap;
+      margin-top: 36px;
+    }
+
+    .cover-meta-item {
+      text-align: center;
+    }
+
+    .cover-meta-item .label {
+      letter-spacing: 0.18em;
+      font-size: 7.5pt;
+      margin-bottom: 4px;
+    }
+
+    .cover-meta-item .value {
+      font-family: 'Inter', sans-serif;
+      font-size: 9.5pt;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .author-block {
+      margin-top: 40px;
+      padding-top: 28px;
+      border-top: 1px solid var(--rule);
+    }
+
+    .author-name {
+      font-family: 'Inter', sans-serif;
+      font-size: 14pt;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .author-role {
+      font-family: 'Inter', sans-serif;
+      font-size: 9pt;
+      color: var(--ink-light);
+      letter-spacing: 0.08em;
+      margin-top: 4px;
+    }
+
+    /* ── SECTION HEADERS ── */
+    h2 {
+      font-family: 'Inter', sans-serif;
+      font-size: 10.5pt;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 48px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h2 .sec-num {
+      background: var(--accent);
+      color: #fff;
+      font-size: 7pt;
+      padding: 2px 7px;
+      border-radius: 3px;
+      letter-spacing: 0.1em;
+    }
+
+    h3 {
+      font-family: 'EB Garamond', serif;
+      font-size: 13pt;
+      font-weight: 600;
+      color: var(--accent2);
+      margin: 28px 0 8px;
+    }
+
+    h4 {
+      font-family: 'Inter', sans-serif;
+      font-size: 9pt;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      margin: 20px 0 6px;
+    }
+
+    p {
+      margin-bottom: 12px;
+      text-align: justify;
+      hyphens: auto;
+    }
+
+    ul,
+    ol {
+      margin: 8px 0 16px 24px;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+
+    li::marker {
+      color: var(--accent);
+    }
+
+    /* ── CALLOUT BOXES ── */
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: var(--code-bg);
+      padding: 14px 18px;
+      margin: 20px 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 10.5pt;
+    }
+
+    .callout.blue {
+      border-color: var(--accent2);
+      background: #edf3fa;
+    }
+
+    .callout.green {
+      border-color: #2a7a50;
+      background: #edf8f2;
+    }
+
+    .callout-title {
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .callout.blue .callout-title {
+      color: var(--accent2);
+    }
+
+    .callout.green .callout-title {
+      color: #2a7a50;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9pt;
+      background: var(--code-bg);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--accent);
+      border: 1px solid rgba(124, 79, 30, 0.15);
+    }
+
+    pre {
+      background: #1e1e1e;
+      color: #d4cfb8;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5pt;
+      line-height: 1.65;
+      padding: 18px 22px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+
+    pre .kw {
+      color: #c792ea;
+    }
+
+    pre .fn {
+      color: #82aaff;
+    }
+
+    pre .str {
+      color: #c3e88d;
+    }
+
+    pre .cm {
+      color: #546e7a;
+      font-style: italic;
+    }
+
+    pre .num {
+      color: #f78c6c;
+    }
+
+    .formula {
+      font-family: 'EB Garamond', serif;
+      font-size: 13pt;
+      font-style: italic;
+      text-align: center;
+      margin: 20px 0;
+      padding: 16px;
+      background: #faf5eb;
+      border: 1px solid #ddd0b0;
+      border-radius: 6px;
+      color: var(--ink);
+    }
+
+    .formula sub,
+    .formula sup {
+      font-size: 0.75em;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-family: 'Inter', sans-serif;
+      font-size: 9.5pt;
+    }
+
+    thead th {
+      background: var(--accent);
+      color: #fff;
+      padding: 9px 12px;
+      text-align: left;
+      letter-spacing: 0.08em;
+      font-weight: 500;
+    }
+
+    tbody td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e8e0d0;
+      vertical-align: top;
+    }
+
+    tbody tr:nth-child(even) td {
+      background: var(--code-bg);
+    }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 24px 0;
+    }
+
+    .flow-step {
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 8.5pt;
+      font-weight: 500;
+      padding: 10px 16px;
+      border-radius: 4px;
+      text-align: center;
+      min-width: 90px;
+      letter-spacing: 0.03em;
+    }
+
+    .flow-step.s2 {
+      background: var(--accent2);
+    }
+
+    .flow-step.s3 {
+      background: #2a7a50;
+    }
+
+    .flow-step.s4 {
+      background: #7a3a1a;
+    }
+
+    .flow-step.s5 {
+      background: #4a3a8a;
+    }
+
+    .flow-arrow {
+      font-size: 18pt;
+      color: var(--rule);
+      padding: 0 4px;
+    }
+
+    /* ── DIAGRAM ASCII ── */
+    .ascii-diagram {
+      background: var(--code-bg);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      padding: 20px;
+      margin: 16px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5pt;
+      line-height: 1.5;
+      white-space: pre;
+      overflow-x: auto;
+      color: var(--ink);
+    }
+
+    .page-num {
+      position: absolute;
+      bottom: 30px;
+      right: var(--margin);
+      font-family: 'Inter', sans-serif;
+      font-size: 8.5pt;
+      color: #aaa;
+      letter-spacing: 0.1em;
+    }
+
+    .page-header-line {
+      font-family: 'Inter', sans-serif;
+      font-size: 7.5pt;
+      color: #bbb;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-align: right;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+      margin-bottom: 0;
+    }
+
+    @media print {
+      @page { size: A4 portrait; margin: 18mm 14mm; }
+
+      html, body {
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      .no-print { display: none !important; }
+
+      .page {
+        box-shadow: none !important;
+        border: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 0 12mm !important;
+        page-break-after: always !important;
+        break-after: page !important;
+      }
+
+      .page::before { width: 4px !important; }
+
+      .page-num { display: none !important; }
+
+      pre {
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+        font-size: 7.5pt !important;
+      }
+
+      .ascii-diagram {
+        font-size: 7pt !important;
+        overflow: hidden !important;
+        white-space: pre-wrap !important;
+      }
+
+      .callout, .formula, table, .flow, h3, h4 {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      a { color: var(--accent) !important; text-decoration: none !important; }
+    }
+
+    .print-bar {
+      max-width: 850px;
+      margin: 0 auto 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .print-btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 9pt;
+      font-weight: 500;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 6px;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      transition: background 0.2s;
+    }
+
+    .print-btn:hover {
+      background: #5c3510;
+    }
+
+    .back-btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 9pt;
+      font-weight: 500;
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--rule);
+      padding: 10px 22px;
+      border-radius: 6px;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .back-btn:hover {
+      border-color: var(--accent);
+      background: var(--code-bg);
+    }
+
+    strong {
+      font-weight: 600;
+    }
+
+    em {
+      color: var(--accent);
+      font-style: italic;
+    }
+
+    .tag {
+      display: inline-block;
+      font-family: 'Inter', sans-serif;
+      font-size: 7pt;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 100px;
+      background: var(--code-bg);
+      border: 1px solid var(--rule);
+      color: var(--accent);
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--rule);
+      margin: 32px 0;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+
+<body>
+
+  <div class="print-bar no-print">
+    <a class="back-btn" href="mechanics_app/problem_2_50.html">← Back to Solver</a>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+      <button class="print-btn" onclick="window.print()">⬇ Save as PDF</button>
+      <span style="font-family:'Inter',sans-serif;font-size:7.5pt;color:#aaa;">In the dialog, set Destination → &ldquo;Save as PDF&rdquo;</span>
+    </div>
+  </div>
+
+  <script>
+    // html2pdf removed — browser print engine produces clean A4 output
+  </script>
+
+  <div id="bp-content">
+  <!-- ═══════════════════════════════════════════
+     PAGE 1  — COVER
+════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="cover">
+      <div class="label">Technical Blueprint · Problem 2/50</div>
+      <h1>Forearm <em>Moment</em> Solver</h1>
+      <div class="title-rule"></div>
+      <p class="subtitle">An interactive diagram-driven solver for the forearm moment
+        problem<br />from Meriam &amp; Kraige — Engineering Mechanics: Statics</p>
+
+      <div class="cover-meta">
+        <div class="cover-meta-item">
+          <div class="label">Reference</div>
+          <div class="value">Meriam &amp; Kraige, Problem 2/50</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="label">Tech Stack</div>
+          <div class="value">HTML5 · CSS3 · JavaScript · Canvas</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="label">Date</div>
+          <div class="value">March 2026</div>
+        </div>
+      </div>
+
+      <div class="author-block">
+        <div class="author-name">Rathanga Parthasarathy</div>
+        <div class="author-role">Author &amp; Developer</div>
+      </div>
+    </div>
+
+    <h2><span class="sec-num">§ 1</span> Problem Statement</h2>
+    <p>
+      <strong>Meriam &amp; Kraige Problem 2/50</strong> — A forearm of mass <em>m</em><sub>arm</sub> = 2.3 kg is held in
+      position by the biceps muscle, which exerts a tension <strong>T</strong> at a perpendicular distance
+      <em>d</em><sub>T</sub> from the elbow pivot <strong>O</strong>. The forearm's centre of gravity is at point
+      <strong>G</strong>, located <em>d</em><sub>G</sub> along the arm from O. A sphere of mass
+      <em>m</em><sub>s</sub> is held at the hand at point <strong>A</strong>, a horizontal distance
+      <em>d</em><sub>A</sub> from O.
+    </p>
+    <p>
+      The student must:
+    </p>
+    <ol>
+      <li>Determine the combined moment of the weights of the forearm and sphere about the elbow pivot <strong>O</strong>.</li>
+      <li>Find the biceps tension <strong>T</strong> required for rotational equilibrium (ΣM<sub>O</sub> = 0).</li>
+    </ol>
+
+    <div class="callout">
+      <div class="callout-title">Core Concept</div>
+      This problem is a classic application of the <strong>scalar moment equation</strong> M = F × d. The forearm acts as
+      a lever arm, and the biceps must produce a counter-clockwise moment to balance the clockwise moments of the two
+      weights about O.
+    </div>
+
+    <h2><span class="sec-num">§ 2</span> Given Data &amp; Variables</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Description</th>
+          <th>Default Value</th>
+          <th>Unit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><em>θ</em></td>
+          <td>Elbow angle (upper arm to forearm)</td>
+          <td>55</td>
+          <td>degrees</td>
+        </tr>
+        <tr>
+          <td><em>d</em><sub>T</sub></td>
+          <td>Horizontal distance from O to biceps attachment</td>
+          <td>50</td>
+          <td>mm</td>
+        </tr>
+        <tr>
+          <td><em>d</em><sub>G</sub></td>
+          <td>Distance along arm from O to CG of forearm</td>
+          <td>150</td>
+          <td>mm</td>
+        </tr>
+        <tr>
+          <td><em>d</em><sub>A</sub></td>
+          <td>Horizontal distance from O to sphere (hand)</td>
+          <td>325</td>
+          <td>mm</td>
+        </tr>
+        <tr>
+          <td><em>m</em><sub>arm</sub></td>
+          <td>Mass of forearm</td>
+          <td>2.3</td>
+          <td>kg</td>
+        </tr>
+        <tr>
+          <td><em>m</em><sub>s</sub></td>
+          <td>Mass of sphere</td>
+          <td>3.6</td>
+          <td>kg</td>
+        </tr>
+        <tr>
+          <td><em>g</em></td>
+          <td>Gravitational acceleration</td>
+          <td>9.81</td>
+          <td>m/s²</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="page-num">1</div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+     PAGE 2  — PHYSICS & EQUATIONS
+════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header-line">Problem 2/50 — Forearm Moment Solver · Rathanga Parthasarathy</div>
+
+    <h2><span class="sec-num">§ 3</span> Physics &amp; Equations</h2>
+
+    <h3>Free-Body Diagram Description</h3>
+    <p>
+      The forearm is modelled as a rigid bar pinned at <strong>O</strong> (the elbow joint). Three forces act on it:
+    </p>
+    <ul>
+      <li><strong>T</strong> — Biceps tension, acting vertically upward at the attachment point B, a horizontal distance
+        <em>d</em><sub>T</sub> from O.</li>
+      <li><strong>W<sub>arm</sub></strong> — Weight of the forearm, acting vertically downward at the CG point G.</li>
+      <li><strong>W<sub>sphere</sub></strong> — Weight of the sphere, acting vertically downward at point A (hand).</li>
+    </ul>
+    <p>
+      The elbow joint provides pin reactions (O<sub>x</sub>, O<sub>y</sub>) but these do not create moments about O
+      since their moment arm is zero.
+    </p>
+
+    <div class="ascii-diagram">
+          T (↑)
+          |
+   upper  |   B       G                         A
+    arm   O───┼───────●────────────────────────── ● sphere
+          ▼   dT      |         dG along arm      |
+         pin          ↓ W_arm                      ↓ W_sphere
+    </div>
+
+    <h3>Weight Calculations</h3>
+    <div class="formula">
+      W<sub>arm</sub> = m<sub>arm</sub> × g &nbsp;&nbsp;&nbsp;&nbsp;
+      W<sub>sphere</sub> = m<sub>s</sub> × g
+    </div>
+
+    <h3>Horizontal Moment Arms</h3>
+    <p>
+      Since moments about O use horizontal (perpendicular) distances for vertically-acting forces, the horizontal
+      distance from O to G depends on the arm geometry:
+    </p>
+    <div class="formula">
+      x<sub>G</sub> = d<sub>G</sub> × cos(90° − θ) = d<sub>G</sub> × sin θ
+    </div>
+
+    <h3>Moment Equation (about O)</h3>
+    <p>Taking counter-clockwise as positive:</p>
+    <div class="formula">
+      ΣM<sub>O</sub> = T × d<sub>T</sub> − W<sub>arm</sub> × x<sub>G</sub> − W<sub>sphere</sub> × d<sub>A</sub> = 0
+    </div>
+
+    <h3>Step 1: Combined Moment of Weights</h3>
+    <div class="formula">
+      M<sub>weights</sub> = W<sub>arm</sub> × x<sub>G</sub> + W<sub>sphere</sub> × d<sub>A</sub>
+      &nbsp;&nbsp; (clockwise about O)
+    </div>
+
+    <h3>Step 2: Required Biceps Tension</h3>
+    <div class="formula">
+      T = M<sub>weights</sub> / d<sub>T</sub>
+      &nbsp;&nbsp; = (W<sub>arm</sub> × x<sub>G</sub> + W<sub>sphere</sub> × d<sub>A</sub>) / d<sub>T</sub>
+    </div>
+
+    <div class="callout blue">
+      <div class="callout-title">Key Insight</div>
+      Because the biceps attachment is very close to the elbow joint (d<sub>T</sub> ≈ 50 mm) compared to the distances
+      to the weights (d<sub>G</sub> ≈ 150 mm, d<sub>A</sub> ≈ 325 mm), the required biceps tension T is <strong>much
+        larger</strong> than the combined weight — a classic mechanical disadvantage of the human forearm lever system.
+    </div>
+
+    <div class="page-num">2</div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+     PAGE 3  — SAMPLE CALCULATION & APP FLOW
+════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header-line">Problem 2/50 — Forearm Moment Solver · Rathanga Parthasarathy</div>
+
+    <h2><span class="sec-num">§ 4</span> Sample Calculation (Default Values)</h2>
+
+    <pre>
+Step 1 — Compute weights
+  W_arm    = 2.3 × 9.81 = <span class="num">22.563 N</span>
+  W_sphere = 3.6 × 9.81 = <span class="num">35.316 N</span>
+
+Step 2 — Horizontal distance O to G
+  a = 90° − 55° = <span class="num">35°</span>   (angle of forearm below horizontal)
+  x_G = 150 × cos(35°) = 150 × 0.8192 = <span class="num">122.87 mm</span>
+
+Step 3 — Combined moment of weights about O (CW)
+  M_weights = W_arm × x_G + W_sphere × d_A
+            = 22.563 × 122.87 + 35.316 × 325
+            = 2,772.04 + 11,477.70
+            = <span class="num">14,249.74 N·mm</span>
+
+Step 4 — Required biceps tension for equilibrium
+  T × d_T = M_weights
+  T = 14,249.74 / 50
+  <span class="fn">T ≈ 285.0 N</span>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Combined Moment (CW) :  <span class="num">14,249.74 N·mm</span>
+  Biceps Tension T      :  <span class="fn">285.0 N</span>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    </pre>
+
+    <h2><span class="sec-num">§ 5</span> Application User Flow</h2>
+    <p>The interactive solver follows a streamlined five-step workflow:</p>
+
+    <div class="flow">
+      <div class="flow-step">① Load Page</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step s2">② Enter Inputs</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step s3">③ Diagram Updates</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step s4">④ Compute</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step s5">⑤ View Solution</div>
+    </div>
+
+    <ul>
+      <li><strong>Load Page:</strong> The solver loads with default values (θ = 55°, m<sub>arm</sub> = 2.3 kg, etc.) and
+        draws the initial diagram.</li>
+      <li><strong>Enter Inputs:</strong> Seven input fields in the right panel allow the student to modify geometry,
+        masses, and gravity. Supports both numeric and symbolic (letter) inputs.</li>
+      <li><strong>Diagram Updates:</strong> As values are typed, the HTML5 Canvas redraws in real time — the forearm
+        rotates to match θ, force arrows scale, and dimension labels update.</li>
+      <li><strong>Compute:</strong> Clicking the gold "Compute Solution" button runs the solver.</li>
+      <li><strong>View Solution:</strong> A results panel slides in with two answer boxes (combined moment and biceps
+        tension T) followed by detailed step-by-step working.</li>
+    </ul>
+
+    <div class="callout green">
+      <div class="callout-title">Symbolic Input Support</div>
+      If the student types a non-numeric value (e.g., "m" for mass), the app displays the symbol on the diagram and
+      in the solution steps, while using the default numeric value internally for calculations and rendering.
+    </div>
+
+    <div class="page-num">3</div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+     PAGE 4  — UI DESIGN & LAYOUT
+════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header-line">Problem 2/50 — Forearm Moment Solver · Rathanga Parthasarathy</div>
+
+    <h2><span class="sec-num">§ 6</span> UI Design &amp; Layout</h2>
+
+    <h3>Screen Layout</h3>
+    <p>The application uses a two-column layout (responsive, stacking on mobile):</p>
+    <ul>
+      <li><strong>Left panel (≈70%):</strong> A full-height HTML5 <code>&lt;canvas&gt;</code> element showing the
+        anatomically-styled forearm diagram with labelled force arrows, dimension lines, and angle arcs.</li>
+      <li><strong>Right panel (≈30%):</strong> Input fields grouped by category (Geometry / Masses / Constants) with
+        a prominent "Compute Solution" button at the bottom.</li>
+    </ul>
+
+    <h3>Canvas Diagram Elements</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Element</th>
+          <th>Visual Style</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Upper arm</td>
+          <td>Anatomical gradient fill with biceps/triceps muscle bulges</td>
+        </tr>
+        <tr>
+          <td>Forearm</td>
+          <td>Gradient-filled tapered body, narrowing towards wrist</td>
+        </tr>
+        <tr>
+          <td>Elbow joint (O)</td>
+          <td>Radial gradient ellipse + blue pivot dot</td>
+        </tr>
+        <tr>
+          <td>Hand at A</td>
+          <td>Simplified hand shape gripping the sphere</td>
+        </tr>
+        <tr>
+          <td>Sphere</td>
+          <td>3D radial gradient with specular highlight</td>
+        </tr>
+        <tr>
+          <td>Biceps tension T</td>
+          <td>Cyan (#00e5ff) upward arrow at point B</td>
+        </tr>
+        <tr>
+          <td>Weight arrows</td>
+          <td>Red (#ff2255) downward arrows at G and A, labelled "m×g N"</td>
+        </tr>
+        <tr>
+          <td>Angle arc</td>
+          <td>Pink dashed arc from vertical to forearm, labelled θ°</td>
+        </tr>
+        <tr>
+          <td>Dimension lines</td>
+          <td>Green (#39ff14) lines with arrowheads, labelled in mm</td>
+        </tr>
+        <tr>
+          <td>Grid</td>
+          <td>Subtle blue grid lines on dark (#050912) background</td>
+        </tr>
+        <tr>
+          <td>Legend</td>
+          <td>Top-right corner showing force color key</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Input Fields</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>Label</th>
+          <th>Default</th>
+          <th>Live Update</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>θ</td>
+          <td>Elbow angle: upper arm to forearm (°)</td>
+          <td>55</td>
+          <td>Yes — rotates forearm</td>
+        </tr>
+        <tr>
+          <td>d<sub>T</sub></td>
+          <td>Horiz. distance O to biceps (mm)</td>
+          <td>50</td>
+          <td>Yes — moves T arrow</td>
+        </tr>
+        <tr>
+          <td>d<sub>G</sub></td>
+          <td>Distance along arm O to G (mm)</td>
+          <td>150</td>
+          <td>Yes — moves G marker</td>
+        </tr>
+        <tr>
+          <td>d<sub>A</sub></td>
+          <td>Horiz. distance O to sphere A (mm)</td>
+          <td>325</td>
+          <td>Yes — moves hand/sphere</td>
+        </tr>
+        <tr>
+          <td>m<sub>arm</sub></td>
+          <td>Forearm mass (kg)</td>
+          <td>2.3</td>
+          <td>Yes — updates arrow label</td>
+        </tr>
+        <tr>
+          <td>m<sub>s</sub></td>
+          <td>Sphere mass (kg)</td>
+          <td>3.6</td>
+          <td>Yes — updates arrow label</td>
+        </tr>
+        <tr>
+          <td>g</td>
+          <td>Gravity (m/s²)</td>
+          <td>9.81</td>
+          <td>Yes — updates arrow labels</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="page-num">4</div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+     PAGE 5  — COLOUR SYSTEM & TECHNICAL ARCHITECTURE
+════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header-line">Problem 2/50 — Forearm Moment Solver · Rathanga Parthasarathy</div>
+
+    <h2><span class="sec-num">§ 7</span> Colour &amp; Design System</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Token</th>
+          <th>Value</th>
+          <th>Usage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>--bg</code></td>
+          <td>#0d0d10</td>
+          <td>Page background (deep dark)</td>
+        </tr>
+        <tr>
+          <td><code>--surface</code></td>
+          <td>#16161e</td>
+          <td>Card / panel backgrounds</td>
+        </tr>
+        <tr>
+          <td><code>--gold</code></td>
+          <td>#c8a050</td>
+          <td>CTA button, highlights, answer values</td>
+        </tr>
+        <tr>
+          <td><code>--blue</code></td>
+          <td>#4a90d9</td>
+          <td>Pivot dot, numeric values in steps</td>
+        </tr>
+        <tr>
+          <td><code>--green</code></td>
+          <td>#4dc87a</td>
+          <td>Live dot indicator, result checkmark</td>
+        </tr>
+        <tr>
+          <td><code>--red</code></td>
+          <td>#e06060</td>
+          <td>Reserved for error states</td>
+        </tr>
+        <tr>
+          <td><code>--text</code></td>
+          <td>#f0ead8</td>
+          <td>Primary text (warm white)</td>
+        </tr>
+        <tr>
+          <td><code>--muted</code></td>
+          <td>#7a7468</td>
+          <td>Labels, secondary text</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2><span class="sec-num">§ 8</span> Technical Architecture</h2>
+
+    <h3>File Structure</h3>
+    <pre>
+mechanics_app/
+└── problem_2_50.html     <span class="cm">&lt;!-- Single-file app: HTML + CSS + JS --&gt;</span>
+    ├── &lt;style&gt;           <span class="cm">&lt;!-- All CSS: layout, colors, typography --&gt;</span>
+    ├── &lt;body&gt;            <span class="cm">&lt;!-- Topbar, hero, grid, input panel, result --&gt;</span>
+    └── &lt;script&gt;          <span class="cm">&lt;!-- parseField, canvas draw, solver, UI --&gt;</span>
+    </pre>
+
+    <h3>Key JavaScript Functions</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Function</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>parseField(id, default)</code></td>
+          <td>Reads input; returns {val, sym, isNum} — handles symbolic/numeric gracefully</td>
+        </tr>
+        <tr>
+          <td><code>drawDiagram()</code></td>
+          <td>Clears canvas and redraws the entire anatomical diagram with force arrows</td>
+        </tr>
+        <tr>
+          <td><code>drawUpperArm()</code></td>
+          <td>Renders humerus with muscle gradients (biceps + triceps bulges)</td>
+        </tr>
+        <tr>
+          <td><code>drawForearm()</code></td>
+          <td>Renders forearm body with tapered Bézier curve and muscle details</td>
+        </tr>
+        <tr>
+          <td><code>drawHand()</code></td>
+          <td>Simplified hand shape at point A</td>
+        </tr>
+        <tr>
+          <td><code>drawSphere()</code></td>
+          <td>3D sphere with radial gradient and specular highlight</td>
+        </tr>
+        <tr>
+          <td><code>drawArrow()</code></td>
+          <td>Generic force arrow with filled head and offset label</td>
+        </tr>
+        <tr>
+          <td><code>compute()</code></td>
+          <td>Runs the solver, populates answer boxes and step-by-step working</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Auto-Scaling Algorithm</h3>
+    <p>
+      The canvas diagram auto-scales based on the input values. The origin point O is positioned with fixed top/left
+      padding, and a scale factor (pixels per mm) is computed to ensure the full arm + sphere fits within the available
+      canvas area, accounting for reserve space for labels, arrows, and dimension lines.
+    </p>
+
+    <div class="page-num">5</div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+     PAGE 6  — RESULT DISPLAY & SOLVER
+════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header-line">Problem 2/50 — Forearm Moment Solver · Rathanga Parthasarathy</div>
+
+    <h2><span class="sec-num">§ 9</span> Result Display</h2>
+
+    <p>
+      After clicking "Compute Solution", a result panel appears with an animated slide-up transition. It contains:
+    </p>
+
+    <h3>Answer Boxes</h3>
+    <p>Two highlighted boxes displayed side by side in a grid:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Box</th>
+          <th>Label</th>
+          <th>Shows</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Left</td>
+          <td>Combined Moment of Weights</td>
+          <td>M<sub>weights</sub> in N·mm (clockwise about O)</td>
+        </tr>
+        <tr>
+          <td>Right</td>
+          <td>Required Biceps Tension T</td>
+          <td>T in Newtons (for ΣM<sub>O</sub> = 0)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Step-by-Step Working</h3>
+    <p>
+      Below the answer boxes, a detailed step-by-step breakdown is displayed using monospace font with colour-coded
+      values. Each step shows the formula, numeric substitution, and result. The steps are:
+    </p>
+    <ol>
+      <li><strong>Compute weights</strong> — W<sub>arm</sub> and W<sub>sphere</sub> from masses and gravity.</li>
+      <li><strong>Geometry</strong> — Calculate the forearm angle below horizontal (a = 90° − θ) and the horizontal
+        distance from O to G.</li>
+      <li><strong>Moment of forearm weight</strong> — M₁ = W<sub>arm</sub> × x<sub>G</sub>.</li>
+      <li><strong>Moment of sphere weight</strong> — M₂ = W<sub>sphere</sub> × d<sub>A</sub>.</li>
+      <li><strong>Combined moment</strong> — M<sub>total</sub> = M₁ + M₂.</li>
+      <li><strong>Equilibrium</strong> — T = M<sub>total</sub> / d<sub>T</sub>.</li>
+    </ol>
+
+    <h2><span class="sec-num">§ 10</span> Sign Convention</h2>
+    <ul>
+      <li><strong>Positive x</strong> → right</li>
+      <li><strong>Positive y</strong> → upward</li>
+      <li><strong>Positive moment</strong> → Counter-Clockwise (CCW)</li>
+      <li>Weight forces act <strong>downward</strong> (negative y) — creating <strong>clockwise</strong> moments about O</li>
+      <li>Biceps tension acts <strong>upward</strong> (positive y) — creating a <strong>counter-clockwise</strong> moment
+        about O</li>
+    </ul>
+
+    <h2><span class="sec-num">§ 11</span> Canvas Interaction Details</h2>
+    <ul>
+      <li>All inputs have <code>input</code> event listeners that call <code>drawDiagram()</code> on every keystroke.</li>
+      <li>The canvas uses <code>devicePixelRatio</code> scaling for crisp rendering on HiDPI displays.</li>
+      <li>The canvas resizes responsively on window resize via a <code>ResizeObserver</code> / <code>resize</code> event.</li>
+      <li>Force arrows, dimension lines, and labels are drawn programmatically — no bitmap assets required.</li>
+    </ul>
+
+    <div class="page-num">6</div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+     PAGE 7  — TECHNOLOGY & FUTURE
+════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header-line">Problem 2/50 — Forearm Moment Solver · Rathanga Parthasarathy</div>
+
+    <h2><span class="sec-num">§ 12</span> Technology Decisions</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Decision</th>
+          <th>Choice</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Architecture</td>
+          <td><strong>Single HTML file</strong></td>
+          <td>No build step; opens directly in any browser; zero dependencies</td>
+        </tr>
+        <tr>
+          <td>Rendering</td>
+          <td><strong>HTML5 Canvas 2D</strong></td>
+          <td>Real-time redraws on every input; smooth rotations and scaling</td>
+        </tr>
+        <tr>
+          <td>Styling</td>
+          <td><strong>Embedded CSS</strong></td>
+          <td>Dark theme with gold accent; uses Inter + DM Mono fonts</td>
+        </tr>
+        <tr>
+          <td>Math</td>
+          <td><strong>Built-in Math object</strong></td>
+          <td>Sufficient for 2D moments; no external library needed</td>
+        </tr>
+        <tr>
+          <td>Input handling</td>
+          <td><strong>parseField() with fallback</strong></td>
+          <td>Gracefully handles symbolic inputs while maintaining calculability</td>
+        </tr>
+        <tr>
+          <td>Diagram style</td>
+          <td><strong>Anatomical rendering</strong></td>
+          <td>Gradient fills, muscle bulges, 3D sphere for visual engagement</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2><span class="sec-num">§ 13</span> Future Enhancements</h2>
+    <ul>
+      <li><strong>Additional problems</strong> — Extend to other Meriam &amp; Kraige problems within the Moments &amp;
+        Couples chapter.</li>
+      <li><strong>Home page</strong> — Build a module selection screen linking to multiple problem solvers.</li>
+      <li><strong>Export to PDF</strong> — Use <code>window.print()</code> or jsPDF to export the diagram + solution as a
+        PDF submission.</li>
+      <li><strong>Save/load session</strong> — Use <code>localStorage</code> to persist input values across sessions.</li>
+      <li><strong>Animation mode</strong> — Animate the moment construction with a parallelogram law visualisation.</li>
+      <li><strong>3D problems</strong> — Extend to 3D equilibrium using unit vectors (Meriam Ch. 3).</li>
+      <li><strong>Friction problems</strong> — Add impending motion, wedge friction, and belt friction solvers.</li>
+    </ul>
+
+    <div class="callout green">
+      <div class="callout-title">Reference Textbook</div>
+      <strong>Engineering Mechanics: Statics</strong><br />
+      J.L. Meriam &amp; L.G. Kraige<br />
+      Wiley, 7th Edition (or later). Problem 2/50 appears in Chapter 2: Force Systems — Moments and Couples section.
+    </div>
+
+    <hr />
+
+    <div
+      style="text-align:center; margin-top:48px; color:#aaa; font-family:'Inter',sans-serif; font-size:8.5pt; letter-spacing:0.15em; text-transform:uppercase;">
+      End of Blueprint &nbsp;·&nbsp; Problem 2/50 Forearm Moment Solver
+      <br /><br />
+      <span style="color:var(--accent); font-size:9pt; letter-spacing:0.2em;">RATHANGA PARTHASARATHY</span>
+    </div>
+
+    <div class="page-num">7</div>
+  </div>
+  </div><!-- /bp-content -->
+
+</body>
+
+</html>

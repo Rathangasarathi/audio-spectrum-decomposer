@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DiodeLab — Signal Graphing Calculator</title>
+<meta name="description" content="Interactive semiconductor diode circuit simulator with real-time waveform analysis">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg0:#030812;--bg1:#060f1e;--bg2:#0a1628;--bg3:#0f1f3a;
+  --card:#0d1829;--border:#1a2944;--border2:#2a4080;
+  --tp:#e2e8f0;--ts:#7d9bc0;--tm:#3d5a7e;
+  --acc:#7c3aed;--acc2:#0ea5e9;--accs:rgba(124,58,237,.15);
+  --gin:#4ade80;--gout:#fb923c;
+  --dcol:#fbbf24;--rcol:#60a5fa;--ccol:#34d399;--scol:#a78bfa;--bcol:#f472b6;
+  --wire:#94a3b8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg0);color:var(--tp);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+/* NAVBAR */
+nav{height:54px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;}
+.logo{width:30px;height:30px;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+nav h1{font-size:16px;font-weight:700;}
+nav h1 span{color:var(--acc);}
+.nbadge{font-size:11px;font-weight:600;color:var(--ts);background:var(--bg3);padding:2px 8px;border-radius:4px;border:1px solid var(--border);}
+.nright{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.nright select{background:var(--bg3);color:var(--tp);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;}
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:230px 1fr 290px;flex:1;overflow:hidden;}
+/* SIDEBAR LEFT */
+.sidebar{background:var(--bg1);border-right:1px solid var(--border);overflow-y:auto;padding:12px 0;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-track{background:transparent;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.cat-label{font-size:10px;font-weight:700;color:var(--tm);letter-spacing:.1em;text-transform:uppercase;padding:8px 16px 4px;}
+.circ-btn{width:100%;text-align:left;background:none;border:none;color:var(--ts);font-size:12.5px;font-family:'Inter',sans-serif;padding:7px 16px 7px 24px;cursor:pointer;transition:all .15s;border-left:2px solid transparent;}
+.circ-btn:hover{color:var(--tp);background:var(--accs);}
+.circ-btn.active{color:var(--acc2);background:var(--accs);border-left-color:var(--acc2);font-weight:600;}
+/* MAIN */
+main{display:flex;flex-direction:column;overflow:hidden;background:var(--bg0);}
+.circuit-view{padding:16px;border-bottom:1px solid var(--border);background:var(--bg1);flex-shrink:0;}
+.circuit-view h2{font-size:13px;font-weight:600;color:var(--ts);margin-bottom:10px;letter-spacing:.05em;text-transform:uppercase;}
+#circuitCanvas{width:100%;height:200px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);}
+.charts-area{flex:1;display:flex;flex-direction:column;gap:0;overflow:hidden;padding:12px;gap:10px;}
+.chart-wrap{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;min-height:0;position:relative;}
+.chart-label{font-size:11px;font-weight:600;color:var(--ts);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;}
+.chart-label span{font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 6px;border-radius:3px;}
+.lbl-in{color:var(--gin);background:rgba(74,222,128,.1);}
+.lbl-out{color:var(--gout);background:rgba(251,146,60,.1);}
+.chart-inner{position:relative;height:calc(100% - 24px);}
+/* SIDEBAR RIGHT */
+.params{background:var(--bg1);border-left:1px solid var(--border);overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px;}
+.params::-webkit-scrollbar{width:4px;}
+.params::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.pcard{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.pcard h3{font-size:11px;font-weight:700;color:var(--ts);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px;}
+.pg{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+.pg label{font-size:11.5px;color:var(--ts);display:flex;justify-content:space-between;align-items:center;}
+.pg label .val{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--tp);background:var(--bg3);padding:1px 6px;border-radius:4px;}
+.pg input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;}
+.pg input[type=number],.pg select{width:100%;background:var(--bg3);color:var(--tp);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12.5px;font-family:'Inter',sans-serif;cursor:pointer;outline:none;transition:border-color .2s;}
+.pg input[type=number]:focus,.pg select:focus{border-color:var(--acc);}
+.hidden{display:none!important;}
+/* ANALYSIS */
+.analysis{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;flex:1;}
+.analysis h3{font-size:11px;font-weight:700;color:var(--ts);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px;}
+.aline{font-size:12px;color:var(--ts);padding:5px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;}
+.aline:last-child{border-bottom:none;}
+.aline .av{font-family:'JetBrains Mono',monospace;color:var(--tp);font-size:12px;}
+.aline .ahigh{color:var(--gin);}
+.aline .ahigh2{color:var(--gout);}
+.formula-box{background:var(--bg3);border-radius:6px;padding:10px;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acc2);line-height:1.8;}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">⚡</div>
+  <h1>Diode<span>Lab</span></h1>
+  <div class="nbadge">Signal Analyzer</div>
+  <div class="nright">
+    <select id="waveType" onchange="update()">
+      <option value="sine">Sine Wave</option>
+      <option value="square">Square Wave</option>
+      <option value="triangle">Triangle Wave</option>
+    </select>
+    <select id="diodeModel" onchange="update()">
+      <option value="Si">Silicon (0.7V)</option>
+      <option value="Ge">Germanium (0.3V)</option>
+      <option value="Ideal">Ideal (0V)</option>
+    </select>
+  </div>
+</nav>
+
+<div class="layout">
+  <!-- LEFT: Circuit selector -->
+  <div class="sidebar">
+    <div class="cat-label">Rectifiers</div>
+    <button class="circ-btn active" data-id="hw-rect">Half-Wave Rectifier</button>
+    <button class="circ-btn" data-id="fw-bridge">Full-Wave Bridge</button>
+    <button class="circ-btn" data-id="hw-cap">HW + Capacitor Filter</button>
+
+    <div class="cat-label">Series Clippers</div>
+    <button class="circ-btn" data-id="ser-pos">Positive Clipper</button>
+    <button class="circ-btn" data-id="ser-neg">Negative Clipper</button>
+    <button class="circ-btn" data-id="ser-bias-pos">Positive Biased (+VB)</button>
+    <button class="circ-btn" data-id="ser-bias-neg">Negative Biased (−VB)</button>
+
+    <div class="cat-label">Parallel Clippers</div>
+    <button class="circ-btn" data-id="par-pos">Positive Clipper</button>
+    <button class="circ-btn" data-id="par-neg">Negative Clipper</button>
+    <button class="circ-btn" data-id="par-bias-pos">Positive Biased (+VB)</button>
+    <button class="circ-btn" data-id="par-bias-neg">Negative Biased (−VB)</button>
+    <button class="circ-btn" data-id="par-double">Double-Ended Clipper</button>
+
+    <div class="cat-label">Clampers</div>
+    <button class="circ-btn" data-id="clamp-pos">Positive Clamper</button>
+    <button class="circ-btn" data-id="clamp-neg">Negative Clamper</button>
+    <button class="circ-btn" data-id="clamp-bias">Biased Clamper</button>
+
+    <div class="cat-label">Zener</div>
+    <button class="circ-btn" data-id="zener">Zener Regulator</button>
+  </div>
+
+  <!-- MAIN: Diagram + Charts -->
+  <main>
+    <div class="circuit-view">
+      <h2 id="circTitle">Half-Wave Rectifier</h2>
+      <canvas id="circuitCanvas"></canvas>
+    </div>
+    <div class="charts-area">
+      <div class="chart-wrap">
+        <div class="chart-label">Input Signal <span class="lbl-in" id="infoIn">Vm = 10V</span></div>
+        <div class="chart-inner"><canvas id="inChart"></canvas></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-label">Output Signal <span class="lbl-out" id="infoOut">—</span></div>
+        <div class="chart-inner"><canvas id="outChart"></canvas></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT: Parameters -->
+  <div class="params">
+    <div class="pcard">
+      <h3>Signal</h3>
+      <div class="pg">
+        <label>Amplitude (Vm) <span class="val" id="vVm">10 V</span></label>
+        <input type="range" id="Vm" min="1" max="30" value="10" step="0.5" oninput="update()">
+      </div>
+      <div class="pg">
+        <label>Frequency <span class="val" id="vFreq">1 kHz</span></label>
+        <input type="range" id="freq" min="100" max="5000" value="1000" step="100" oninput="update()">
+      </div>
+    </div>
+
+    <div class="pcard">
+      <h3>Circuit Values</h3>
+      <div class="pg">
+        <label>Resistance R (Ω)</label>
+        <input type="number" id="R" value="1000" min="1" oninput="update()">
+      </div>
+      <div class="pg" id="grpVB">
+        <label>Bias Voltage VB (V)</label>
+        <input type="number" id="VB" value="5" min="0" max="25" oninput="update()">
+      </div>
+      <div class="pg" id="grpVz">
+        <label>Zener Voltage Vz (V)</label>
+        <input type="number" id="Vz" value="5.6" min="1" max="25" step="0.1" oninput="update()">
+      </div>
+      <div class="pg" id="grpC">
+        <label>Capacitance C (µF)</label>
+        <input type="number" id="C" value="100" min="1" max="10000" oninput="update()">
+      </div>
+    </div>
+
+    <div class="analysis" id="analysisBox">
+      <h3>Analysis</h3>
+      <div id="analysisContent"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let currentId = 'hw-rect';
+let inChart, outChart;
+const N = 600; // points per 2 cycles
+
+// ─── CIRCUIT CONFIGS ─────────────────────────────────────
+const CIRCS = {
+  'hw-rect':      {name:'Half-Wave Rectifier',      hasBias:false,hasCap:false,hasZener:false},
+  'fw-bridge':    {name:'Full-Wave Bridge Rectifier',hasBias:false,hasCap:false,hasZener:false},
+  'hw-cap':       {name:'HW Rectifier + Cap Filter', hasBias:false,hasCap:true, hasZener:false},
+  'ser-pos':      {name:'Series Clipper (Positive)',  hasBias:false,hasCap:false,hasZener:false},
+  'ser-neg':      {name:'Series Clipper (Negative)',  hasBias:false,hasCap:false,hasZener:false},
+  'ser-bias-pos': {name:'Biased Series Clipper (+VB)',hasBias:true, hasCap:false,hasZener:false},
+  'ser-bias-neg': {name:'Biased Series Clipper (−VB)',hasBias:true, hasCap:false,hasZener:false},
+  'par-pos':      {name:'Parallel Clipper (Positive)',hasBias:false,hasCap:false,hasZener:false},
+  'par-neg':      {name:'Parallel Clipper (Negative)',hasBias:false,hasCap:false,hasZener:false},
+  'par-bias-pos': {name:'Biased Parallel Clipper (+VB)',hasBias:true,hasCap:false,hasZener:false},
+  'par-bias-neg': {name:'Biased Parallel Clipper (−VB)',hasBias:true,hasCap:false,hasZener:false},
+  'par-double':   {name:'Double-Ended Clipper',      hasBias:true, hasCap:false,hasZener:false},
+  'clamp-pos':    {name:'Positive Clamper',          hasBias:false,hasCap:true, hasZener:false},
+  'clamp-neg':    {name:'Negative Clamper',          hasBias:false,hasCap:true, hasZener:false},
+  'clamp-bias':   {name:'Biased Clamper',            hasBias:true, hasCap:true, hasZener:false},
+  'zener':        {name:'Zener Voltage Regulator',   hasBias:false,hasCap:false,hasZener:true},
+};
+
+// ─── PARAMS ───────────────────────────────────────────────
+function getParams() {
+  const Vm   = parseFloat(document.getElementById('Vm').value) || 10;
+  const freq = parseFloat(document.getElementById('freq').value) || 1000;
+  const R    = parseFloat(document.getElementById('R').value) || 1000;
+  const VB   = parseFloat(document.getElementById('VB').value) || 5;
+  const Vz   = parseFloat(document.getElementById('Vz').value) || 5.6;
+  const C    = parseFloat(document.getElementById('C').value) || 100;
+  const dm   = document.getElementById('diodeModel').value;
+  const wt   = document.getElementById('waveType').value;
+  const Vk   = dm === 'Si' ? 0.7 : dm === 'Ge' ? 0.3 : 0.0;
+  return {Vm,freq,R,VB,Vz,C,Vk,dm,wt};
+}
+
+// ─── WAVEFORM GENERATION ─────────────────────────────────
+function genInput(p) {
+  const T = 1/p.freq;
+  const total = 2*T;
+  const times = [];
+  const vals = [];
+  for (let i=0;i<N;i++) {
+    const t = (i/(N-1))*total;
+    times.push(t*1000); // ms
+    let v;
+    const phase = (t % T)/T; // 0..1
+    if (p.wt==='sine') v = p.Vm*Math.sin(2*Math.PI*p.freq*t);
+    else if (p.wt==='square') v = phase<0.5?p.Vm:-p.Vm;
+    else v = phase<0.5?p.Vm*(4*phase-1):p.Vm*(3-4*phase); // triangle
+    vals.push(v);
+  }
+  return {times,vals};
+}
+
+function computeOutput(id, input, p, times) {
+  const {Vm,Vk,VB,Vz,C,R,freq} = p;
+  const vi = input;
+  switch(id) {
+    case 'hw-rect':
+      return vi.map(v => v>Vk?v-Vk:0);
+    case 'fw-bridge':
+      return vi.map(v => Math.abs(v)>2*Vk?Math.abs(v)-2*Vk:0);
+    case 'hw-cap': {
+      // Peak detector model
+      let peak=0;
+      const RC = R*(C/1e6);
+      const dt = (2/freq)/(N-1);
+      return vi.map(v=>{
+        const rect = v>Vk?v-Vk:0;
+        if(rect>=peak){ peak=rect; }
+        else { peak *= Math.exp(-dt/RC); }
+        return peak;
+      });
+    }
+    case 'ser-pos':
+      return vi.map(v=>v>Vk?v-Vk:0);
+    case 'ser-neg':
+      return vi.map(v=>v<-Vk?v+Vk:0);
+    case 'ser-bias-pos':
+      // Clips below (VB+Vk) — passes positive above VB
+      return vi.map(v=>v>(VB+Vk)?v-VB-Vk:0);
+    case 'ser-bias-neg':
+      // Clips above -(VB+Vk) — passes negative below -VB
+      return vi.map(v=>v<-(VB+Vk)?v+VB+Vk:0);
+    case 'par-pos':
+      // Diode clamps output at Vk (positive side)
+      return vi.map(v=>v>Vk?Vk:v);
+    case 'par-neg':
+      // Diode clamps output at -Vk (negative side)
+      return vi.map(v=>v<-Vk?-Vk:v);
+    case 'par-bias-pos':
+      // Clamps at VB+Vk
+      return vi.map(v=>v>VB+Vk?VB+Vk:v);
+    case 'par-bias-neg':
+      // Clamps at -(VB+Vk)
+      return vi.map(v=>v<-(VB+Vk)?-(VB+Vk):v);
+    case 'par-double':
+      // Clips both above VB+Vk and below -(VB+Vk)
+      return vi.map(v=>v>VB+Vk?VB+Vk:(v<-(VB+Vk)?-(VB+Vk):v));
+    case 'clamp-pos':
+      // Positive clamper: shifts waveform up, negative peak → -Vk
+      // vo = vi + (Vm - Vk)
+      return vi.map(v=>v+Vm-Vk);
+    case 'clamp-neg':
+      // Negative clamper: shifts waveform down, positive peak → Vk
+      return vi.map(v=>v-Vm+Vk);
+    case 'clamp-bias':
+      // Biased clamper: clamps to VB
+      return vi.map(v=>v+Vm+VB-Vk);
+    case 'zener': {
+      const Vzfull = Vz+Vk;
+      return vi.map(v=>{
+        if(v>Vzfull) return Vz;
+        if(v<-Vk) return -Vk;
+        return v;
+      });
+    }
+    default: return vi.slice();
+  }
+}
+
+// ─── ANALYSIS TEXT ────────────────────────────────────────
+function getAnalysis(id, p) {
+  const {Vm,Vk,VB,Vz,dm} = p;
+  const vk = Vk.toFixed(1);
+  const lines = [];
+  const f = (v)=>v.toFixed(2);
+  switch(id) {
+    case 'hw-rect':
+      lines.push(['Diode Knee Voltage','Vk = '+vk+' V']);
+      lines.push(['Peak Output','Vo_pk = '+(Vm-Vk).toFixed(2)+' V']);
+      lines.push(['Condition ON','Vi > '+vk+' V']);
+      lines.push(['Formula','Vo = Vi − Vk (ON)', 'Vo = 0 (OFF)']);
+      break;
+    case 'fw-bridge':
+      lines.push(['2-Diode Drop','2×Vk = '+(2*Vk).toFixed(1)+' V']);
+      lines.push(['Peak Output','Vo_pk = '+(Vm-2*Vk).toFixed(2)+' V']);
+      lines.push(['Formula','Vo = |Vi| − 2Vk']);
+      break;
+    case 'hw-cap':
+      lines.push(['Peak Output','Vo ≈ '+(Vm-Vk).toFixed(2)+' V DC']);
+      lines.push(['Ripple','RC discharge controlled']);
+      lines.push(['Formula','Peak detector model']);
+      break;
+    case 'ser-pos':
+      lines.push(['Transition V','Vt = +'+vk+' V']);
+      lines.push(['Peak Output','Vo_pk = '+(Vm-Vk).toFixed(2)+' V']);
+      lines.push(['ON condition','Vi > '+vk]);
+      lines.push(['Formula','Vo = Vi−Vk | Vo=0']);
+      break;
+    case 'ser-neg':
+      lines.push(['Transition V','Vt = −'+vk+' V']);
+      lines.push(['Peak Output','Vo_pk = −'+(Vm-Vk).toFixed(2)+' V']);
+      lines.push(['ON condition','Vi < −'+vk]);
+      lines.push(['Formula','Vo = Vi+Vk | Vo=0']);
+      break;
+    case 'ser-bias-pos':
+      lines.push(['Transition V','Vt = +('+VB+'+'+vk+') = '+(VB+Vk).toFixed(2)+' V']);
+      lines.push(['Peak Output','Vo_pk = '+(Vm-VB-Vk).toFixed(2)+' V']);
+      lines.push(['Formula','Vo = Vi−VB−Vk (ON)']);
+      break;
+    case 'ser-bias-neg':
+      lines.push(['Transition V','Vt = −'+(VB+Vk).toFixed(2)+' V']);
+      lines.push(['Peak Output','Vo_pk = −'+(Vm-VB-Vk).toFixed(2)+' V']);
+      lines.push(['Formula','Vo = Vi+VB+Vk (ON)']);
+      break;
+    case 'par-pos':
+      lines.push(['Clamp Level','Vo_max = +'+vk+' V']);
+      lines.push(['ON when','Vi > '+vk+' V']);
+      lines.push(['Formula','Vo=Vk (ON) | Vo=Vi']);
+      break;
+    case 'par-neg':
+      lines.push(['Clamp Level','Vo_min = −'+vk+' V']);
+      lines.push(['ON when','Vi < −'+vk+' V']);
+      lines.push(['Formula','Vo=−Vk (ON) | Vo=Vi']);
+      break;
+    case 'par-bias-pos':
+      lines.push(['Clamp Level','Vo_max = '+(VB+Vk).toFixed(2)+' V']);
+      lines.push(['Transition V','Vt = '+(VB+Vk).toFixed(2)+' V']);
+      lines.push(['Formula','Vo=VB+Vk (ON) | Vo=Vi']);
+      break;
+    case 'par-bias-neg':
+      lines.push(['Clamp Level','Vo_min = −'+(VB+Vk).toFixed(2)+' V']);
+      lines.push(['Transition V','Vt = −'+(VB+Vk).toFixed(2)+' V']);
+      lines.push(['Formula','Vo=−(VB+Vk) | Vo=Vi']);
+      break;
+    case 'par-double':
+      lines.push(['Upper Clamp','+'+(VB+Vk).toFixed(2)+' V']);
+      lines.push(['Lower Clamp','−'+(VB+Vk).toFixed(2)+' V']);
+      lines.push(['Passband','|Vi| < '+(VB+Vk).toFixed(2)+' V']);
+      break;
+    case 'clamp-pos':
+      lines.push(['Cap charges to','Vc = '+(Vm-Vk).toFixed(2)+' V']);
+      lines.push(['Vo max','2Vm−Vk = '+(2*Vm-Vk).toFixed(2)+' V']);
+      lines.push(['Vo min','≈ −'+vk+' V (clamped)']);
+      lines.push(['Formula','Vo = Vi + (Vm−Vk)']);
+      break;
+    case 'clamp-neg':
+      lines.push(['Cap charges to','Vc = '+(Vm-Vk).toFixed(2)+' V']);
+      lines.push(['Vo min','−(2Vm−Vk) = −'+(2*Vm-Vk).toFixed(2)+' V']);
+      lines.push(['Vo max','≈ +'+vk+' V (clamped)']);
+      lines.push(['Formula','Vo = Vi − (Vm−Vk)']);
+      break;
+    case 'clamp-bias':
+      lines.push(['Cap charges to','Vc = '+(Vm+VB-Vk).toFixed(2)+' V']);
+      lines.push(['Vo max','≈ '+(2*Vm+VB-Vk).toFixed(2)+' V']);
+      lines.push(['Bias adds','VB = '+VB+' V']);
+      lines.push(['Formula','Vo = Vi + Vm + VB − Vk']);
+      break;
+    case 'zener':
+      lines.push(['Zener Voltage','Vz = '+Vz+' V']);
+      lines.push(['Vk (forward)',''+vk+' V']);
+      lines.push(['Clamp (pos)','Vo ≤ '+Vz+' V']);
+      lines.push(['Clamp (neg)','Vo ≥ −'+vk+' V']);
+      lines.push(['Formula','Vz regulates positive']);
+      break;
+  }
+  return lines;
+}
+
+// ─── CIRCUIT DRAWING ──────────────────────────────────────
+const cc = document.getElementById('circuitCanvas');
+function resizeCC(){cc.width=cc.parentElement.offsetWidth;cc.height=200;}
+
+function drawW(ctx,x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
+
+function drawDiode(ctx,cx,cy,rev){
+  ctx.save();
+  ctx.strokeStyle='#fbbf24';ctx.fillStyle='rgba(251,191,36,.4)';ctx.lineWidth=2;
+  const hw=14,h=13;
+  const ax=rev?cx+hw:cx-hw,bx=rev?cx-hw:cx+hw;
+  ctx.beginPath();ctx.moveTo(ax,cy-h);ctx.lineTo(ax,cy+h);ctx.lineTo(bx,cy);ctx.closePath();
+  ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(bx,cy-h-2);ctx.lineTo(bx,cy+h+2);ctx.stroke();
+  ctx.restore();
+}
+function drawDiodeV(ctx,cx,cy,rev){
+  ctx.save();
+  ctx.strokeStyle='#fbbf24';ctx.fillStyle='rgba(251,191,36,.4)';ctx.lineWidth=2;
+  const hw=14,h=13;
+  const ay=rev?cy+hw:cy-hw,by=rev?cy-hw:cy+hw;
+  ctx.beginPath();ctx.moveTo(cx-h,ay);ctx.lineTo(cx+h,ay);ctx.lineTo(cx,by);ctx.closePath();
+  ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx-h-2,by);ctx.lineTo(cx+h+2,by);ctx.stroke();
+  ctx.restore();
+}
+function drawResV(ctx,x,y,h,lbl){
+  ctx.save();ctx.strokeStyle='#60a5fa';ctx.fillStyle='rgba(96,165,250,.08)';ctx.lineWidth=1.5;
+  ctx.strokeRect(x-12,y,24,h);ctx.fillRect(x-12,y,24,h);
+  ctx.fillStyle='#60a5fa';ctx.font='11px JetBrains Mono';ctx.textAlign='center';
+  ctx.fillText(lbl||'R',x+20,y+h/2+4);
+  ctx.restore();
+}
+function drawResH(ctx,x,y,w,lbl){
+  ctx.save();ctx.strokeStyle='#60a5fa';ctx.fillStyle='rgba(96,165,250,.08)';ctx.lineWidth=1.5;
+  ctx.strokeRect(x,y-10,w,20);ctx.fillRect(x,y-10,w,20);
+  ctx.fillStyle='#60a5fa';ctx.font='11px JetBrains Mono';ctx.textAlign='center';
+  ctx.fillText(lbl||'R',x+w/2,y+30);
+  ctx.restore();
+}
+function drawCapV(ctx,x,y,h){
+  ctx.save();ctx.strokeStyle='#34d399';ctx.lineWidth=2;
+  const m=y+h/2;
+  drawW(ctx,x,y,x,m-6);drawW(ctx,x,m+6,x,y+h);
+  drawW(ctx,x-14,m-6,x+14,m-6);drawW(ctx,x-14,m+6,x+14,m+6);
+  ctx.fillStyle='#34d399';ctx.font='11px JetBrains Mono';ctx.textAlign='left';
+  ctx.fillText('C',x+18,m+4);
+  ctx.restore();
+}
+function drawSrcAC(ctx,cx,cy){
+  ctx.save();ctx.strokeStyle='#a78bfa';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(cx,cy,28,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();
+  for(let i=0;i<=30;i++){const x=cx-15+i,y=cy+8*Math.sin(i*Math.PI/15*2);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+  ctx.stroke();
+  ctx.fillStyle='#a78bfa';ctx.font='10px Inter';ctx.textAlign='center';
+  ctx.fillText('Vs',cx,cy+42);
+  ctx.restore();
+}
+function drawGnd(ctx,x,y){
+  ctx.save();ctx.strokeStyle='#7d9bc0';ctx.lineWidth=1.5;
+  drawW(ctx,x,y,x,y+8);
+  drawW(ctx,x-12,y+8,x+12,y+8);
+  drawW(ctx,x-8,y+13,x+8,y+13);
+  drawW(ctx,x-4,y+18,x+4,y+18);
+  ctx.restore();
+}
+function drawNode(ctx,x,y,lbl,col='#4ade80'){
+  ctx.save();ctx.fillStyle=col;
+  ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();
+  if(lbl){ctx.font='bold 12px JetBrains Mono';ctx.fillStyle=col;ctx.textAlign='left';ctx.fillText(lbl,x+8,y+4);}
+  ctx.restore();
+}
+function drawBatt(ctx,cx,cy,rev){
+  ctx.save();ctx.strokeStyle='#f472b6';ctx.lineWidth=2;
+  const y1=cy-16,y2=cy+16;
+  drawW(ctx,cx,cy-30,cx,y1);
+  drawW(ctx,cx-12,y1,cx+12,y1);
+  drawW(ctx,cx-7,y1+8,cx+7,y1+8);
+  drawW(ctx,cx,y2-8,cx,cy+30);
+  ctx.fillStyle='#f472b6';ctx.font='10px JetBrains Mono';ctx.textAlign='center';
+  ctx.fillText(rev?'−VB':'+VB',cx+22,cy+4);
+  ctx.restore();
+}
+function drawZener(ctx,cx,cy){
+  ctx.save();
+  ctx.strokeStyle='#fb923c';ctx.fillStyle='rgba(251,146,60,.35)';ctx.lineWidth=2;
+  const hw=14,h=13;
+  ctx.beginPath();ctx.moveTo(cx-hw,cy-h);ctx.lineTo(cx-hw,cy+h);ctx.lineTo(cx+hw,cy);ctx.closePath();
+  ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx+hw-4,cy-h-2);ctx.lineTo(cx+hw,cy-h+2);ctx.lineTo(cx+hw,cy+h-2);ctx.lineTo(cx+hw+4,cy+h+2);ctx.stroke();
+  ctx.fillStyle='#fb923c';ctx.font='10px JetBrains Mono';ctx.textAlign='center';
+  ctx.fillText('Dz',cx,cy+22);
+  ctx.restore();
+}
+
+function drawCircuit(id, p) {
+  resizeCC();
+  const ctx = cc.getContext('2d');
+  ctx.clearRect(0,0,cc.width,cc.height);
+  ctx.strokeStyle='#94a3b8';ctx.lineWidth=2;
+
+  const W=cc.width,H=cc.height;
+  const cx=W/2,cy=H/2;
+
+  switch(id){
+    case 'hw-rect': {
+      // Source left, diode horizontal, R vertical right, loops back
+      const sx=90,sy=cy,tx=W-100,ty=cy-50;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-50); // top of source up
+      drawW(ctx,sx,cy-50,200,cy-50); // top wire
+      drawDiode(ctx,220,cy-50,false);
+      drawW(ctx,240,cy-50,tx,cy-50);
+      drawResV(ctx,tx,cy-90,80,'R');
+      drawNode(ctx,tx,cy-50,'Vo');
+      drawW(ctx,tx,cy+30,sx,cy+30);
+      drawW(ctx,sx,cy+30,sx,cy+28);
+      drawGnd(ctx,tx,cy+30);
+      break;
+    }
+    case 'fw-bridge': {
+      // Bridge rectifier: 4 diodes
+      const sx=cx-160,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      // junction top/bottom
+      const jt={x:cx,y:cy-70},jb={x:cx,y:cy+70};
+      const jl={x:cx-80,y:cy},jr={x:cx+80,y:cy};
+      // wires from source
+      drawW(ctx,sx,sy-28,jl.x,jl.y);
+      drawW(ctx,sx,sy+28,jb.x,jb.y);
+      // 4 diodes
+      // D1: jl → jt (up-left)
+      drawW(ctx,jl.x,jl.y,jl.x,jt.y+14);drawDiodeV(ctx,jl.x,jt.y,true);drawW(ctx,jl.x,jt.y-14,jt.x,jt.y);
+      // D2: jl → jb (down-left)
+      drawW(ctx,jl.x,jl.y,jl.x,jb.y-14);drawDiodeV(ctx,jl.x,jb.y,false);drawW(ctx,jl.x,jb.y+14,jb.x,jb.y);
+      // D3: jt → jr
+      drawW(ctx,jt.x,jt.y,jr.x-14,jr.y-30);drawDiode(ctx,jr.x,jr.y-30,false);drawW(ctx,jr.x+14,jr.y-30,jr.x+50,jr.y-30);
+      // D4: jb → jr
+      drawW(ctx,jb.x,jb.y,jr.x-14,jr.y+30);drawDiode(ctx,jr.x,jr.y+30,false);drawW(ctx,jr.x+14,jr.y+30,jr.x+50,jr.y+30);
+      drawW(ctx,jr.x+50,jr.y-30,cx+160,jr.y-30);
+      drawResV(ctx,cx+160,cy-70,60,'R');
+      drawNode(ctx,cx+160,jr.y-30,'Vo');
+      drawW(ctx,cx+160,cy-10,jr.x+50,cy+30);
+      drawGnd(ctx,cx+160,cy-10);
+      break;
+    }
+    case 'hw-cap':{
+      const sx=80,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-55);drawW(ctx,sx,cy-55,190,cy-55);
+      drawDiode(ctx,210,cy-55,false);
+      drawW(ctx,230,cy-55,W-160,cy-55);
+      // capacitor
+      drawCapV(ctx,W-130,cy-90,70);
+      drawW(ctx,W-130,cy-55,W-160,cy-55);
+      drawW(ctx,W-130,cy-55,W-130,cy-55);
+      // resistor
+      drawResV(ctx,W-80,cy-90,70,'R');
+      drawNode(ctx,W-80,cy-55,'Vo');
+      drawW(ctx,W-80,cy-20,sx,cy-20);
+      drawW(ctx,sx,cy-20,sx,cy+28);
+      drawGnd(ctx,W-80,cy-20);
+      break;
+    }
+    case 'ser-pos':{
+      const sx=80,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-50);drawW(ctx,sx,cy-50,180,cy-50);
+      drawDiode(ctx,200,cy-50,false);
+      drawW(ctx,220,cy-50,W-120,cy-50);
+      drawResV(ctx,W-120,cy-90,80,'R');
+      drawNode(ctx,W-120,cy-50,'Vo');
+      drawW(ctx,W-120,cy+30,sx,cy+30);drawW(ctx,sx,cy+30,sx,cy+28);
+      drawGnd(ctx,W-120,cy+30);
+      break;
+    }
+    case 'ser-neg':{
+      const sx=80,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-50);drawW(ctx,sx,cy-50,180,cy-50);
+      drawDiode(ctx,200,cy-50,true); // reversed
+      drawW(ctx,220,cy-50,W-120,cy-50);
+      drawResV(ctx,W-120,cy-90,80,'R');
+      drawNode(ctx,W-120,cy-50,'Vo');
+      drawW(ctx,W-120,cy+30,sx,cy+30);drawW(ctx,sx,cy+30,sx,cy+28);
+      drawGnd(ctx,W-120,cy+30);
+      break;
+    }
+    case 'ser-bias-pos':{
+      const sx=80,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-50);drawW(ctx,sx,cy-50,170,cy-50);
+      drawDiode(ctx,190,cy-50,false);
+      drawW(ctx,210,cy-50,260,cy-50);
+      drawBatt(ctx,295,cy-50,false);
+      drawW(ctx,320,cy-50,W-120,cy-50);
+      drawResV(ctx,W-120,cy-90,80,'R');
+      drawNode(ctx,W-120,cy-50,'Vo');
+      drawW(ctx,W-120,cy+30,sx,cy+30);drawW(ctx,sx,cy+30,sx,cy+28);
+      drawGnd(ctx,W-120,cy+30);
+      break;
+    }
+    case 'ser-bias-neg':{
+      const sx=80,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-50);drawW(ctx,sx,cy-50,170,cy-50);
+      drawDiode(ctx,190,cy-50,true);
+      drawW(ctx,210,cy-50,260,cy-50);
+      drawBatt(ctx,295,cy-50,true);
+      drawW(ctx,320,cy-50,W-120,cy-50);
+      drawResV(ctx,W-120,cy-90,80,'R');
+      drawNode(ctx,W-120,cy-50,'Vo');
+      drawW(ctx,W-120,cy+30,sx,cy+30);drawW(ctx,sx,cy+30,sx,cy+28);
+      drawGnd(ctx,W-120,cy+30);
+      break;
+    }
+    case 'par-pos':{
+      const sx=80,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-50);drawW(ctx,sx,cy-50,180,cy-50);
+      drawResH(ctx,180,cy-50,80,'R');
+      drawW(ctx,260,cy-50,W-100,cy-50);
+      // diode to ground
+      drawW(ctx,W-100,cy-50,W-100,cy-20);
+      drawDiodeV(ctx,W-100,cy,false);
+      drawW(ctx,W-100,cy+20,W-100,cy+30);
+      drawGnd(ctx,W-100,cy+30-8);
+      drawNode(ctx,W-100,cy-50,'Vo');
+      drawW(ctx,W-100,cy-50,W-60,cy-50);
+      drawW(ctx,sx,cy+30,W-60,cy+30);drawW(ctx,W-60,cy+30,W-60,cy-50);
+      drawW(ctx,sx,cy+30,sx,cy+28);
+      break;
+    }
+    case 'par-neg':{
+      const sx=80,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-50);drawW(ctx,sx,cy-50,180,cy-50);
+      drawResH(ctx,180,cy-50,80,'R');
+      drawW(ctx,260,cy-50,W-100,cy-50);
+      drawW(ctx,W-100,cy-50,W-100,cy-20);
+      drawDiodeV(ctx,W-100,cy,true); // reversed
+      drawW(ctx,W-100,cy+20,W-100,cy+30);
+      drawGnd(ctx,W-100,cy+30-8);
+      drawNode(ctx,W-100,cy-50,'Vo');
+      drawW(ctx,W-100,cy-50,W-60,cy-50);
+      drawW(ctx,sx,cy+30,W-60,cy+30);drawW(ctx,W-60,cy+30,W-60,cy-50);
+      drawW(ctx,sx,cy+30,sx,cy+28);
+      break;
+    }
+    case 'par-bias-pos':{
+      const sx=80,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-50);drawW(ctx,sx,cy-50,180,cy-50);
+      drawResH(ctx,180,cy-50,80,'R');
+      drawW(ctx,260,cy-50,W-120,cy-50);
+      drawW(ctx,W-120,cy-50,W-120,cy-25);
+      drawDiodeV(ctx,W-120,cy,false);
+      drawBatt(ctx,W-120,cy+28,false);
+      drawW(ctx,W-120,cy+60,W-120,cy+70);
+      drawGnd(ctx,W-120,cy+62);
+      drawNode(ctx,W-120,cy-50,'Vo');
+      drawW(ctx,W-120,cy-50,W-60,cy-50);
+      drawW(ctx,sx,cy+30,W-60,cy+30);drawW(ctx,W-60,cy+30,W-60,cy-50);
+      drawW(ctx,sx,cy+30,sx,cy+28);
+      break;
+    }
+    case 'par-bias-neg':{
+      const sx=80,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-50);drawW(ctx,sx,cy-50,180,cy-50);
+      drawResH(ctx,180,cy-50,80,'R');
+      drawW(ctx,260,cy-50,W-120,cy-50);
+      drawW(ctx,W-120,cy-50,W-120,cy-25);
+      drawDiodeV(ctx,W-120,cy,true);
+      drawBatt(ctx,W-120,cy+28,true);
+      drawW(ctx,W-120,cy+60,W-120,cy+70);
+      drawGnd(ctx,W-120,cy+62);
+      drawNode(ctx,W-120,cy-50,'Vo');
+      drawW(ctx,W-120,cy-50,W-60,cy-50);
+      drawW(ctx,sx,cy+30,W-60,cy+30);drawW(ctx,W-60,cy+30,W-60,cy-50);
+      drawW(ctx,sx,cy+30,sx,cy+28);
+      break;
+    }
+    case 'par-double':{
+      const sx=80,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-50);drawW(ctx,sx,cy-50,180,cy-50);
+      drawResH(ctx,180,cy-50,80,'R');
+      drawW(ctx,260,cy-50,W-120,cy-50);
+      // two diodes to ±VB
+      drawNode(ctx,W-120,cy-50,'Vo');
+      // top diode (pos clamp at VB):
+      drawW(ctx,W-120,cy-50,W-120,cy-70);
+      drawDiodeV(ctx,W-120,cy-84,true);
+      drawBatt(ctx,W-120,cy-112,false);
+      // bottom diode (neg clamp at -VB):
+      drawW(ctx,W-120,cy-50,W-120,cy-30);
+      drawDiodeV(ctx,W-120,cy-16,false);
+      drawBatt(ctx,W-120,cy+16,true);
+      drawW(ctx,sx,cy+30,sx,cy+28);drawGnd(ctx,W-120,cy+50);
+      break;
+    }
+    case 'clamp-pos':{
+      const sx=80,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-55);
+      // capacitor in series
+      drawCapV(ctx,135,cy-90,70);
+      drawW(ctx,sx,cy-55,135,cy-55);
+      drawW(ctx,135,cy-55,220,cy-55);
+      // diode to gnd
+      drawDiodeV(ctx,220,cy-20,true);
+      drawW(ctx,220,cy-55,220,cy-34);drawW(ctx,220,cy-6,220,cy+20);
+      drawGnd(ctx,220,cy+12);
+      // R to ground
+      drawW(ctx,220,cy-55,W-100,cy-55);
+      drawResV(ctx,W-100,cy-90,70,'R');
+      drawNode(ctx,W-100,cy-55,'Vo');
+      drawW(ctx,W-100,cy-20,220,cy-20);
+      drawW(ctx,W-100,cy-20,W-100,cy-20);
+      drawW(ctx,sx,cy+30,W-100,cy+30);drawW(ctx,W-100,cy+30,W-100,cy-20);
+      drawW(ctx,sx,cy+30,sx,cy+28);
+      break;
+    }
+    case 'clamp-neg':{
+      const sx=80,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-55);
+      drawCapV(ctx,135,cy-90,70);
+      drawW(ctx,sx,cy-55,135,cy-55);
+      drawW(ctx,135,cy-55,220,cy-55);
+      drawDiodeV(ctx,220,cy-20,false); // reversed
+      drawW(ctx,220,cy-55,220,cy-34);drawW(ctx,220,cy-6,220,cy+20);
+      drawGnd(ctx,220,cy+12);
+      drawW(ctx,220,cy-55,W-100,cy-55);
+      drawResV(ctx,W-100,cy-90,70,'R');
+      drawNode(ctx,W-100,cy-55,'Vo');
+      drawW(ctx,sx,cy+30,W-100,cy+30);drawW(ctx,W-100,cy+30,W-100,cy-20);
+      drawW(ctx,sx,cy+30,sx,cy+28);
+      break;
+    }
+    case 'clamp-bias':{
+      const sx=80,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-55);
+      drawCapV(ctx,135,cy-90,70);
+      drawW(ctx,sx,cy-55,135,cy-55);
+      drawW(ctx,135,cy-55,220,cy-55);
+      drawDiodeV(ctx,220,cy-25,true);
+      drawW(ctx,220,cy-55,220,cy-39);
+      drawBatt(ctx,220,cy+5,false);
+      drawW(ctx,220,cy+40,220,cy+50);
+      drawGnd(ctx,220,cy+42);
+      drawW(ctx,220,cy-55,W-100,cy-55);
+      drawResV(ctx,W-100,cy-90,70,'R');
+      drawNode(ctx,W-100,cy-55,'Vo');
+      drawW(ctx,sx,cy+30,W-100,cy+30);drawW(ctx,W-100,cy+30,W-100,cy-20);
+      drawW(ctx,sx,cy+30,sx,cy+28);
+      break;
+    }
+    case 'zener':{
+      const sx=80,sy=cy;
+      drawSrcAC(ctx,sx,sy);
+      drawW(ctx,sx,sy-28,sx,cy-55);drawW(ctx,sx,cy-55,170,cy-55);
+      drawResH(ctx,170,cy-55,80,'Rs');
+      drawW(ctx,250,cy-55,W-100,cy-55);
+      drawW(ctx,W-100,cy-55,W-100,cy-30);
+      drawZener(ctx,W-100,cy);
+      drawW(ctx,W-100,cy+24,W-100,cy+40);
+      drawGnd(ctx,W-100,cy+32);
+      drawNode(ctx,W-100,cy-55,'Vo');
+      drawW(ctx,W-100,cy-55,W-50,cy-55);
+      drawW(ctx,sx,cy+30,W-50,cy+30);drawW(ctx,W-50,cy+30,W-50,cy-55);
+      drawW(ctx,sx,cy+30,sx,cy+28);
+      break;
+    }
+  }
+}
+
+// ─── CHARTS ───────────────────────────────────────────────
+function makeChart(id, color, label) {
+  const ctx = document.getElementById(id).getContext('2d');
+  return new Chart(ctx, {
+    type:'line',
+    data:{
+      labels:[],
+      datasets:[{label,data:[],borderColor:color,borderWidth:2,pointRadius:0,tension:0.3,fill:{target:'origin',above:color+'22',below:color+'11'}}]
+    },
+    options:{
+      animation:false,
+      responsive:true,
+      maintainAspectRatio:false,
+      interaction:{mode:'nearest',intersect:false},
+      plugins:{legend:{display:false},tooltip:{
+        callbacks:{label:ctx=>`${ctx.parsed.y.toFixed(3)} V`},
+        backgroundColor:'#0d1829',borderColor:'#1a2944',borderWidth:1,
+        titleColor:'#7d9bc0',bodyColor:'#e2e8f0',
+      }},
+      scales:{
+        x:{
+          ticks:{color:'#3d5a7e',font:{size:10},maxTicksLimit:6,callback:v=>typeof v==='number'?v.toFixed(2)+'ms':v},
+          grid:{color:'#0f1f3a'},border:{color:'#1a2944'},
+          title:{display:true,text:'Time (ms)',color:'#3d5a7e',font:{size:10}}
+        },
+        y:{
+          ticks:{color:'#3d5a7e',font:{size:10,family:'JetBrains Mono'},callback:v=>v.toFixed(1)+' V'},
+          grid:{color:'#0f1f3a'},border:{color:'#1a2944'},
+          title:{display:true,text:'Voltage (V)',color:'#3d5a7e',font:{size:10}}
+        }
+      }
+    }
+  });
+}
+
+function initCharts(){
+  inChart  = makeChart('inChart','#4ade80','Input Voltage');
+  outChart = makeChart('outChart','#fb923c','Output Voltage');
+}
+
+function setChartData(chart, times, vals){
+  chart.data.labels = times;
+  chart.data.datasets[0].data = vals;
+  chart.update('none');
+}
+
+// ─── MAIN UPDATE ─────────────────────────────────────────
+function update(){
+  const p = getParams();
+  const cfg = CIRCS[currentId];
+
+  // Update labels
+  document.getElementById('vVm').textContent = p.Vm+' V';
+  document.getElementById('vFreq').textContent = p.freq>=1000?(p.freq/1000).toFixed(1)+' kHz':p.freq+' Hz';
+  document.getElementById('circTitle').textContent = cfg.name;
+  document.getElementById('infoIn').textContent = 'Vm='+p.Vm+'V  f='+(p.freq>=1000?(p.freq/1000)+'kHz':p.freq+'Hz');
+
+  // Show/hide controls
+  document.getElementById('grpVB').classList.toggle('hidden',!cfg.hasBias);
+  document.getElementById('grpC').classList.toggle('hidden',!cfg.hasCap);
+  document.getElementById('grpVz').classList.toggle('hidden',!cfg.hasZener);
+
+  // Generate waveforms
+  const {times, vals} = genInput(p);
+  const out = computeOutput(currentId, vals, p, times);
+
+  // Update charts
+  setChartData(inChart,  times, vals);
+  setChartData(outChart, times, out);
+
+  // Update info
+  const outMax = Math.max(...out).toFixed(2);
+  const outMin = Math.min(...out).toFixed(2);
+  document.getElementById('infoOut').textContent = 'Max='+outMax+'V  Min='+outMin+'V';
+
+  // Draw circuit
+  drawCircuit(currentId, p);
+
+  // Analysis
+  const lines = getAnalysis(currentId, p);
+  const html = lines.map(l=>`<div class="aline"><span>${l[0]}</span><span class="av">${l[1]}</span></div>`).join('');
+  const formula = lines.find(l=>l[0]==='Formula');
+  document.getElementById('analysisContent').innerHTML = html;
+}
+
+// ─── EVENTS ───────────────────────────────────────────────
+document.querySelectorAll('.circ-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.circ-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentId = btn.dataset.id;
+    update();
+  });
+});
+
+window.addEventListener('resize',()=>{update();});
+
+// ─── INIT ─────────────────────────────────────────────────
+initCharts();
+update();
+</script>
+</body>
+</html>

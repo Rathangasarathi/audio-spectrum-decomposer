@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Problem 4/22 — Loaded Truss Solver · Technical Blueprint</title>
+  <meta name="description"
+    content="Technical blueprint for an interactive loaded truss solver for Meriam & Kraige Problem 4/22, by Rathanga Parthasarathy." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a1a1a;
+      --ink-light: #444;
+      --rule: #c8b89a;
+      --accent: #7c4f1e;
+      --accent2: #2e5c8a;
+      --bg: #fdfaf6;
+      --paper: #ffffff;
+      --code-bg: #f5f0e8;
+      --margin: 72px;
+    }
+
+    *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { background: #e8e0d5; }
+
+    body {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 11.5pt;
+      line-height: 1.75;
+      color: var(--ink);
+      background: #e8e0d5;
+      padding: 40px 20px;
+    }
+
+    .page {
+      background: var(--paper);
+      max-width: 850px;
+      margin: 0 auto 60px;
+      padding: var(--margin) var(--margin) 80px;
+      box-shadow: 0 4px 40px rgba(0,0,0,0.18), 0 1px 0 rgba(0,0,0,0.05);
+      position: relative;
+    }
+
+    .page::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 5px; height: 100%;
+      background: linear-gradient(180deg, var(--accent), #b8892e);
+    }
+
+    .cover {
+      text-align: center;
+      padding: 80px var(--margin) 60px;
+      border-bottom: 2px solid var(--rule);
+      margin-bottom: 48px;
+    }
+
+    .cover .label {
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt; font-weight: 600;
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 24px;
+    }
+
+    .cover h1 {
+      font-size: 2.6rem; font-weight: 600;
+      line-height: 1.2; color: var(--ink); margin-bottom: 10px;
+    }
+
+    .cover h1 em { color: var(--accent); font-style: italic; }
+
+    .cover .subtitle {
+      font-size: 1.05rem; color: var(--ink-light);
+      font-style: italic; margin-bottom: 20px;
+    }
+
+    .title-rule {
+      width: 80px; height: 3px;
+      background: linear-gradient(90deg, var(--accent), #c8a050);
+      margin: 20px auto; border-radius: 2px;
+    }
+
+    .cover-meta {
+      display: flex; justify-content: center;
+      gap: 36px; flex-wrap: wrap; margin-top: 36px;
+    }
+
+    .cover-meta-item { text-align: center; }
+    .cover-meta-item .label { letter-spacing: 0.18em; font-size: 7.5pt; margin-bottom: 4px; }
+    .cover-meta-item .value {
+      font-family: 'Inter', sans-serif;
+      font-size: 9.5pt; font-weight: 500; color: var(--ink);
+    }
+
+    .author-block {
+      margin-top: 40px; padding-top: 28px;
+      border-top: 1px solid var(--rule);
+    }
+
+    .author-name {
+      font-family: 'Inter', sans-serif;
+      font-size: 14pt; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .author-role {
+      font-family: 'Inter', sans-serif;
+      font-size: 9pt; color: var(--ink-light);
+      letter-spacing: 0.08em; margin-top: 4px;
+    }
+
+    h2 {
+      font-family: 'Inter', sans-serif;
+      font-size: 10.5pt; font-weight: 600;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--accent);
+      margin: 48px 0 16px; padding-bottom: 8px;
+      border-bottom: 1px solid var(--rule);
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    h2 .sec-num {
+      background: var(--accent); color: #fff;
+      font-size: 7pt; padding: 2px 7px;
+      border-radius: 3px; letter-spacing: 0.1em;
+    }
+
+    h3 {
+      font-family: 'EB Garamond', serif;
+      font-size: 13pt; font-weight: 600;
+      color: var(--accent2); margin: 28px 0 8px;
+    }
+
+    h4 {
+      font-family: 'Inter', sans-serif;
+      font-size: 9pt; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--ink-light); margin: 20px 0 6px;
+    }
+
+    p { margin-bottom: 12px; text-align: justify; hyphens: auto; }
+
+    ul, ol { margin: 8px 0 16px 24px; }
+    li { margin-bottom: 5px; }
+    li::marker { color: var(--accent); }
+
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: var(--code-bg);
+      padding: 14px 18px; margin: 20px 0;
+      border-radius: 0 6px 6px 0; font-size: 10.5pt;
+    }
+
+    .callout.blue  { border-color: var(--accent2); background: #edf3fa; }
+    .callout.green { border-color: #2a7a50; background: #edf8f2; }
+
+    .callout-title {
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt; font-weight: 700;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 6px;
+    }
+
+    .callout.blue  .callout-title { color: var(--accent2); }
+    .callout.green .callout-title { color: #2a7a50; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9pt; background: var(--code-bg);
+      padding: 1px 5px; border-radius: 3px;
+      color: var(--accent); border: 1px solid rgba(124,79,30,0.15);
+    }
+
+    pre {
+      background: #1e1e1e; color: #d4cfb8;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5pt; line-height: 1.65;
+      padding: 18px 22px; border-radius: 6px;
+      overflow-x: auto; margin: 16px 0;
+    }
+
+    pre .kw  { color: #c792ea; }
+    pre .fn  { color: #82aaff; }
+    pre .str { color: #c3e88d; }
+    pre .cm  { color: #546e7a; font-style: italic; }
+    pre .num { color: #f78c6c; }
+
+    .formula {
+      font-family: 'EB Garamond', serif;
+      font-size: 13pt; font-style: italic;
+      text-align: center; margin: 20px 0;
+      padding: 16px; background: #faf5eb;
+      border: 1px solid #ddd0b0; border-radius: 6px; color: var(--ink);
+    }
+
+    .formula sub, .formula sup { font-size: 0.75em; }
+
+    table {
+      width: 100%; border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-family: 'Inter', sans-serif; font-size: 9.5pt;
+    }
+
+    thead th {
+      background: var(--accent); color: #fff;
+      padding: 9px 12px; text-align: left;
+      letter-spacing: 0.08em; font-weight: 500;
+    }
+
+    tbody td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e8e0d0; vertical-align: top;
+    }
+
+    tbody tr:nth-child(even) td { background: var(--code-bg); }
+
+    .flow {
+      display: flex; align-items: center; gap: 0;
+      flex-wrap: wrap; justify-content: center; margin: 24px 0;
+    }
+
+    .flow-step {
+      background: var(--accent); color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 8.5pt; font-weight: 500;
+      padding: 10px 16px; border-radius: 4px;
+      text-align: center; min-width: 90px; letter-spacing: 0.03em;
+    }
+
+    .flow-step.s2 { background: var(--accent2); }
+    .flow-step.s3 { background: #2a7a50; }
+    .flow-step.s4 { background: #7a3a1a; }
+    .flow-step.s5 { background: #4a3a8a; }
+
+    .flow-arrow { font-size: 18pt; color: var(--rule); padding: 0 4px; }
+
+    .ascii-diagram {
+      background: var(--code-bg); border: 1px solid var(--rule);
+      border-radius: 6px; padding: 20px; margin: 16px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5pt; line-height: 1.5;
+      white-space: pre; overflow-x: auto; color: var(--ink);
+    }
+
+    .page-num {
+      position: absolute; bottom: 30px; right: var(--margin);
+      font-family: 'Inter', sans-serif;
+      font-size: 8.5pt; color: #aaa; letter-spacing: 0.1em;
+    }
+
+    .page-header-line {
+      font-family: 'Inter', sans-serif;
+      font-size: 7.5pt; color: #bbb;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      text-align: right; border-bottom: 1px solid #eee;
+      padding-bottom: 10px; margin-bottom: 0;
+    }
+
+    @media print {
+      @page { size: A4 portrait; margin: 18mm 14mm; }
+
+      html, body {
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      .no-print { display: none !important; }
+
+      .page {
+        box-shadow: none !important;
+        border: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 0 12mm !important;
+        page-break-after: always !important;
+        break-after: page !important;
+      }
+
+      .page::before { width: 4px !important; }
+
+      .page-num { display: none !important; }
+
+      pre {
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+        font-size: 7.5pt !important;
+      }
+
+      .ascii-diagram {
+        font-size: 7pt !important;
+        overflow: hidden !important;
+        white-space: pre-wrap !important;
+      }
+
+      .callout, .formula, table, .flow, .member-grid, h3, h4 {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      a { color: var(--accent) !important; text-decoration: none !important; }
+    }
+
+    .print-bar {
+      max-width: 850px; margin: 0 auto 20px;
+      display: flex; justify-content: space-between; gap: 12px;
+    }
+
+    .print-btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 9pt; font-weight: 500;
+      background: var(--accent); color: #fff;
+      border: none; padding: 10px 22px;
+      border-radius: 6px; cursor: pointer;
+      letter-spacing: 0.08em; transition: background 0.2s;
+    }
+
+    .print-btn:hover { background: #5c3510; }
+
+    .back-btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 9pt; font-weight: 500;
+      background: transparent; color: var(--accent);
+      border: 1px solid var(--rule); padding: 10px 22px;
+      border-radius: 6px; cursor: pointer;
+      letter-spacing: 0.08em; transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .back-btn:hover { border-color: var(--accent); background: var(--code-bg); }
+
+    strong { font-weight: 600; }
+    em { color: var(--accent); font-style: italic; }
+
+    .tag {
+      display: inline-block;
+      font-family: 'Inter', sans-serif;
+      font-size: 7pt; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 100px;
+      background: var(--code-bg); border: 1px solid var(--rule);
+      color: var(--accent); margin-right: 4px; vertical-align: middle;
+    }
+
+    hr { border: none; border-top: 1px solid var(--rule); margin: 32px 0; }
+
+    .member-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 8px; margin: 16px 0;
+    }
+
+    .member-card {
+      border: 1px solid var(--rule); border-radius: 4px;
+      padding: 10px 12px; text-align: center;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .member-card .m-name {
+      font-size: 11pt; font-weight: 600; color: var(--ink);
+    }
+
+    .member-card .m-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9pt; margin-top: 4px;
+    }
+
+    .member-card .m-type {
+      font-size: 7pt; letter-spacing: 0.1em;
+      text-transform: uppercase; margin-top: 3px;
+      color: var(--ink-light);
+    }
+
+    .member-card.comp { border-color: #2e5c8a; background: #edf3fa; }
+    .member-card.comp .m-val { color: #2e5c8a; }
+    .member-card.tens { border-color: #2a7a50; background: #edf8f2; }
+    .member-card.tens .m-val { color: #2a7a50; }
+    .member-card.zero { border-color: #aaa; background: #f5f5f5; }
+    .member-card.zero .m-val { color: #999; }
+  </style>
+</head>
+
+<body>
+
+  <div class="print-bar no-print">
+    <a class="back-btn" href="problem_4_22.html">← Back to Solver</a>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+      <button class="print-btn" onclick="window.print()">⬇ Save as PDF</button>
+      <span style="font-family:'Inter',sans-serif;font-size:7.5pt;color:#aaa;">In the dialog, set Destination → &ldquo;Save as PDF&rdquo;</span>
+    </div>
+  </div>
+
+  <div id="bp-content">
+
+  <!-- ═══════════════════════════════════════════
+     PAGE 1  — COVER
+════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="cover">
+      <div class="label">Technical Blueprint · Problem 4/22</div>
+      <h1>Loaded Truss — <em>Method of Joints</em></h1>
+      <div class="title-rule"></div>
+      <p class="subtitle">An interactive diagram-driven solver for all 13 members of a<br />
+        loaded truss from Meriam &amp; Kraige — Engineering Mechanics: Statics</p>
+
+      <div class="cover-meta">
+        <div class="cover-meta-item">
+          <div class="label">Reference</div>
+          <div class="value">Meriam &amp; Kraige, Problem 4/22</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="label">Tech Stack</div>
+          <div class="value">HTML5 · CSS3 · JavaScript · Canvas</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="label">Members Solved</div>
+          <div class="value">All 13 (complete truss)</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="label">Date</div>
+          <div class="value">March 2026</div>
+        </div>
+      </div>
+
+      <div class="author-block">
+        <div class="author-name">Rathanga Parthasarathy</div>
+        <div class="author-role">Author &amp; Developer</div>
+      </div>
+    </div>
+
+    <h2><span class="sec-num">§ 1</span> Problem Statement</h2>
+    <p>
+      <strong>Meriam &amp; Kraige Problem 4/22</strong> — A loaded Pratt truss has five top-chord nodes
+      <strong>A, B, C, D, E</strong> spaced at equal horizontal distance <em>d</em>, and three bottom-chord nodes
+      <strong>H, G, F</strong> hanging at depth <em>d</em> below the top chord.
+    </p>
+    <p>Applied loads act downward: <em>L</em>/2 at nodes A and E, and <em>L</em> at nodes B, C, D.
+       Support conditions: a <strong>pin</strong> at A and a <strong>45°-inclined roller</strong> at E.
+    </p>
+    <p>The student must determine the forces in <strong>all 13 members</strong> of the truss,
+      classifying each as Tension (T), Compression (C), or zero-force.
+    </p>
+
+    <div class="callout">
+      <div class="callout-title">Core Concept</div>
+      This problem applies the <strong>Method of Joints</strong> — at each pin joint, the two equilibrium
+      equations (ΣF<sub>x</sub> = 0 and ΣF<sub>y</sub> = 0) are used to find unknown member forces.
+      Joints are solved in a sequence beginning with those having only two unknowns.
+      Member <strong>CG</strong> supports the full load at joint C directly.
+    </div>
+
+    <h2><span class="sec-num">§ 2</span> Truss Geometry &amp; Loading</h2>
+
+    <div class="ascii-diagram">
+  ↓L/2    ↓L      ↓L      ↓L      ↓L/2
+   A────────B────────C────────D────────E   ← Top chord (y = 0)
+   |╲       |╲      /|       /|
+   | ╲      | ╲    / |      / |
+   |  ╲     |  ╲  /  |     /  |
+   |   ╲    |   ╲/   |    /   |
+   |    H────────G────────F   |   ← Bot chord (y = -d)
+   |                                   |
+  Pin                              45°-Roller
+  (Ax,Ay)                         (E at 45°)
+
+  Spacing: A-B = B-C = C-D = D-E = d (horizontal)
+  Depth  : A-H·y = H-B·y = d (vertical)
+  All diagonal panels: 45° (d × d right triangle)
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Description</th>
+          <th>Default Value</th>
+          <th>Unit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><em>d</em></td><td>Panel spacing (horizontal &amp; vertical)</td><td>1 000</td><td>mm</td></tr>
+        <tr><td><em>L</em></td><td>Full panel load applied at B, C, D</td><td>10 000</td><td>N</td></tr>
+        <tr><td><em>L</em>/2</td><td>Half-panel load applied at A and E</td><td>5 000</td><td>N</td></tr>
+        <tr><td>A<sub>x</sub>, A<sub>y</sub></td><td>Pin reactions at A</td><td>2L, 2L</td><td>N</td></tr>
+        <tr><td>E</td><td>Roller reaction at E (45° direction)</td><td>2√2·L</td><td>N</td></tr>
+      </tbody>
+    </table>
+
+    <div class="page-num">1</div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+     PAGE 2  — MEMBER INVENTORY & REACTIONS
+════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header-line">Problem 4/22 — Loaded Truss Solver · Rathanga Parthasarathy</div>
+
+    <h2><span class="sec-num">§ 3</span> Member Inventory (13 Members)</h2>
+
+    <table>
+      <thead>
+        <tr><th>Group</th><th>Members</th><th>Count</th><th>Angle</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Top chord</td><td>AB, BC, CD, DE</td><td>4</td><td>0° (horizontal)</td></tr>
+        <tr><td>Bottom chord</td><td>HG, GF</td><td>2</td><td>0° (horizontal)</td></tr>
+        <tr><td>Verticals</td><td>BH, CG, DF</td><td>3</td><td>90° (vertical)</td></tr>
+        <tr><td>Diagonals</td><td>AH, BG, DG, EF</td><td>4</td><td>45°</td></tr>
+        <tr><td><strong>Total</strong></td><td></td><td><strong>13</strong></td><td></td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="sec-num">§ 4</span> Global Equilibrium — Reactions</h2>
+
+    <h3>Moment about A (ΣM<sub>A</sub> = 0)</h3>
+    <p>Taking clockwise moments as positive, with the roller reaction <em>E</em> perpendicular to the 45° surface
+    (i.e., at 45° to horizontal, components E·cos45° leftward and E·sin45° upward):</p>
+
+    <div class="formula">
+      −L·d − L·2d − L·3d − (L/2)·4d + E·(1/√2)·4d = 0
+    </div>
+    <div class="formula">
+      −8Ld + 2√2·E·d = 0 &nbsp;&nbsp;⟹&nbsp;&nbsp; <strong>E = 2√2·L</strong>
+    </div>
+
+    <h3>Force Equilibrium</h3>
+    <div class="formula">
+      ΣF<sub>x</sub> = 0 : &nbsp; A<sub>x</sub> = E·cos45° = 2L
+    </div>
+    <div class="formula">
+      ΣF<sub>y</sub> = 0 : &nbsp; A<sub>y</sub> + E·sin45° − 4L = 0 &nbsp;⟹&nbsp; A<sub>y</sub> = 2L
+    </div>
+
+    <div class="callout blue">
+      <div class="callout-title">Symmetry Check</div>
+      By the symmetry of the loading (L/2 at both ends, L at all interior nodes) and geometry,
+      A<sub>y</sub> = E·sin45° = 2L — the truss is loaded symmetrically, confirming equal vertical reactions.
+    </div>
+
+    <h2><span class="sec-num">§ 5</span> Method of Joints — Derivation</h2>
+
+    <h3>Joint A → Members AH (T) and AB (C)</h3>
+    <p>External at A: A<sub>x</sub> = 2L (→), A<sub>y</sub> = 2L (↑), applied load = L/2 (↓).
+    Members: AB (horizontal →) and AH (diagonal 45° down-right).</p>
+    <div class="formula">
+      ΣF<sub>y</sub> = 0: 2L − L/2 − AH / √2 = 0&nbsp;&nbsp;⟹&nbsp;&nbsp;<strong>AH = 3√2L/2 (T)</strong>
+    </div>
+    <div class="formula">
+      ΣF<sub>x</sub> = 0: 2L + AH/√2 − AB = 0&nbsp;&nbsp;⟹&nbsp;&nbsp;<strong>AB = 7L/2 (C)</strong>
+    </div>
+
+    <h3>Joint E → Members FE (T) and DE (C)</h3>
+    <p>By symmetry with joint A: <strong>FE = 3√2L/2 (T)</strong> and <strong>DE = 7L/2 (C)</strong>.</p>
+
+    <h3>Joint H → Members BH (C) and HG (T)</h3>
+    <p>Known: AH = 3√2L/2 (T).
+    Directions from H: to A = (−1/√2, +1/√2), to B = (0,+1), to G = (+1,0).</p>
+    <div class="formula">
+      ΣF<sub>y</sub> = 0: AH/√2 + BH = 0&nbsp;&nbsp;⟹&nbsp;&nbsp;<strong>BH = 3L/2 (C)</strong>
+    </div>
+    <div class="formula">
+      ΣF<sub>x</sub> = 0: −AH/√2 + HG = 0&nbsp;&nbsp;⟹&nbsp;&nbsp;<strong>HG = 3L/2 (T)</strong>
+    </div>
+
+    <div class="page-num">2</div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+     PAGE 3  — JOINTS B, C, G AND RESULTS
+════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header-line">Problem 4/22 — Loaded Truss Solver · Rathanga Parthasarathy</div>
+
+    <h2><span class="sec-num">§ 6</span> Joints B, C, and G</h2>
+
+    <h3>Joint B → Members BG (T) and BC (C)</h3>
+    <p>Known: AB = 7L/2 (C), BH = 3L/2 (C).</p>
+    <div class="formula">
+      ΣF<sub>y</sub> = 0: BH − L − BG/√2 = 0&nbsp;&nbsp;⟹&nbsp;&nbsp;<strong>BG = L√2/2 (T)</strong>
+    </div>
+    <div class="formula">
+      ΣF<sub>x</sub> = 0: AB + BC + BG/√2 = 0&nbsp;&nbsp;⟹&nbsp;&nbsp;<strong>BC = 4L (C)</strong>
+    </div>
+
+    <h3>Joint C → Members CG (C) and CD (C)</h3>
+    <p>Known: BC = 4L (C). No diagonals at C.</p>
+    <div class="formula">
+      ΣF<sub>y</sub> = 0: −L − CG = 0&nbsp;&nbsp;⟹&nbsp;&nbsp;<strong>CG = L (C)</strong>
+    </div>
+    <div class="formula">
+      ΣF<sub>x</sub> = 0: BC + CD = 0&nbsp;&nbsp;⟹&nbsp;&nbsp;<strong>CD = 4L (C)</strong>
+    </div>
+
+    <div class="callout">
+      <div class="callout-title">Verification at Joint G</div>
+      At joint G, horizontal equilibrium: −HG − BG/√2 + DG/√2 + GF = 0.
+      Vertical equilibrium: −CG + BG/√2 + DG/√2 = 0 ⟹ −L + L/2 + L/2 = 0 ✓.
+      The compression of CG perfectly balances the upward pull of diagonals BG and DG.
+    </div>
+
+    <h2><span class="sec-num">§ 7</span> Complete Results (Default: L = 10 kN, d = 1 m)</h2>
+
+    <h4>Top Chord (Compression)</h4>
+    <div class="member-grid">
+      <div class="member-card comp"><div class="m-name">AB</div><div class="m-val">35.00 kN</div><div class="m-type">Compression</div></div>
+      <div class="member-card comp"><div class="m-name">BC</div><div class="m-val">40.00 kN</div><div class="m-type">Compression</div></div>
+      <div class="member-card comp"><div class="m-name">CD</div><div class="m-val">40.00 kN</div><div class="m-type">Compression</div></div>
+      <div class="member-card comp"><div class="m-name">DE</div><div class="m-val">35.00 kN</div><div class="m-type">Compression</div></div>
+    </div>
+
+    <h4>Bottom Chord (Tension)</h4>
+    <div class="member-grid" style="grid-template-columns: repeat(2,1fr);">
+      <div class="member-card tens"><div class="m-name">HG</div><div class="m-val">15.00 kN</div><div class="m-type">Tension</div></div>
+      <div class="member-card tens"><div class="m-name">GF</div><div class="m-val">15.00 kN</div><div class="m-type">Tension</div></div>
+    </div>
+
+    <h4>Verticals</h4>
+    <div class="member-grid" style="grid-template-columns: repeat(3,1fr);">
+      <div class="member-card comp"><div class="m-name">BH</div><div class="m-val">15.00 kN</div><div class="m-type">Compression</div></div>
+      <div class="member-card comp"><div class="m-name">CG</div><div class="m-val">10.00 kN</div><div class="m-type">Compression</div></div>
+      <div class="member-card comp"><div class="m-name">DF</div><div class="m-val">15.00 kN</div><div class="m-type">Compression</div></div>
+    </div>
+
+    <h4>Diagonals</h4>
+    <div class="member-grid">
+      <div class="member-card tens"><div class="m-name">AH</div><div class="m-val">21.21 kN</div><div class="m-type">Tension</div></div>
+      <div class="member-card tens"><div class="m-name">BG</div><div class="m-val">7.07 kN</div><div class="m-type">Tension</div></div>
+      <div class="member-card tens"><div class="m-name">DG</div><div class="m-val">7.07 kN</div><div class="m-type">Tension</div></div>
+      <div class="member-card tens"><div class="m-name">FE</div><div class="m-val">21.21 kN</div><div class="m-type">Tension</div></div>
+    </div>
+
+    <div class="page-num">3</div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+     PAGE 4  — SAMPLE CALCULATION & APP FLOW
+════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header-line">Problem 4/22 — Loaded Truss Solver · Rathanga Parthasarathy</div>
+
+    <h2><span class="sec-num">§ 8</span> Sample Calculation (L = 10 000 N, d = 1 000 mm)</h2>
+
+    <pre>
+Step 1 — Global equilibrium
+  ΣM_A = 0:  −Ld − L(2d) − L(3d) − (L/2)(4d) + E·(1/√2)·4d = 0
+             −8Ld + 2√2·E·d = 0
+             E = <span class="num">2√2 × 10000 = 28284.3 N</span>
+  A_x = E·cos45° = <span class="num">20000 N</span>
+  A_y = 4L − E·sin45° = <span class="num">20000 N</span>
+
+Step 2 — Joint A
+  ΣFy: 20000 − 5000 − AH/√2 = 0
+       AH = 15000 × √2 = <span class="fn">21213.2 N  (T)</span>
+  ΣFx: 20000 + 21213.2/√2 − AB = 0
+       AB = 20000 + 15000 = <span class="fn">35000 N  (C)</span>
+
+Step 3 — Joint H
+  ΣFy: 15000 + BH = 0  →  <span class="fn">BH = 15000 N (C)</span>
+  ΣFx: −15000 + HG = 0 →  <span class="fn">HG = 15000 N (T)</span>
+
+Step 4 — Joint B
+  ΣFy: 15000 − 10000 − BG/√2 = 0  →  <span class="fn">BG = 7071.1 N (T)</span>
+  ΣFx: 35000 + BC + 5000 = 0      →  <span class="fn">BC = 40000 N (C)</span>
+
+Step 5 — Joint C
+  ΣFy: −10000 − CG = 0  →  <span class="fn">CG = 10000 N (C)</span>
+  ΣFx: 40000 + CD = 0   →  <span class="fn">CD = 40000 N (C)</span>
+
+Steps 6,7,8 — By symmetry (D, F, E) give DF, GF, DG, FE, DE.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Top chord  AB=DE=35, BC=CD=40: <span class="num">kN (C)</span>
+  Bot chord  HG=GF       : <span class="num">15.00 kN (T)</span>
+  Verticals  BH=DF=15, CG=10: <span class="num">kN (C)</span>
+  Diag outer AH=FE       : <span class="num">21.21 kN (T)</span>
+  Diag inner BG=DG       : <span class="num"> 7.07 kN (T)</span>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    </pre>
+
+    <h2><span class="sec-num">§ 9</span> Application User Flow</h2>
+    <p>The interactive solver follows a five-step workflow:</p>
+
+    <div class="flow">
+      <div class="flow-step">① Load Page</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step s2">② Set d &amp; L</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step s3">③ Diagram Updates</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step s4">④ Compute</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step s5">⑤ All 13 Members</div>
+    </div>
+
+    <ul>
+      <li><strong>Load Page:</strong> The solver loads with default values (d = 1 000 mm, L = 10 000 N) and renders the live canvas truss diagram with grid, dimension lines, and load arrows.</li>
+      <li><strong>Set d &amp; L:</strong> Two input fields allow the student to parametrically change the panel spacing and applied load. Symbolic inputs (e.g., "L") are supported.</li>
+      <li><strong>Diagram Updates:</strong> The HTML5 Canvas redraws in real time as values change — nodes reposition, members rescale, load arrows update.</li>
+      <li><strong>Compute:</strong> Clicking "Compute Solution" runs the full method-of-joints solver for all 13 members in sequence.</li>
+      <li><strong>All 13 Members:</strong> Results appear in four grouped sections (Top Chord, Bottom Chord, Verticals, Diagonals), color-coded: <strong>cyan</strong> = Compression, <strong>green</strong> = Tension, <strong>grey</strong> = Zero-force.</li>
+    </ul>
+
+    <div class="callout green">
+      <div class="callout-title">Corrected Truss Diagonals</div>
+      Unlike some alternative truss layouts, the standard problem 4/22 utilizes diagonals AH, BG, DG, and EF.
+      Because of this geometry, joint C has no diagonals, meaning the vertical member CG must carry the entire applied load L in compression.
+    </div>
+
+    <div class="page-num">4</div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+     PAGE 5  — UI DESIGN & CODE ARCHITECTURE
+════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header-line">Problem 4/22 — Loaded Truss Solver · Rathanga Parthasarathy</div>
+
+    <h2><span class="sec-num">§ 10</span> UI Design &amp; Layout</h2>
+
+    <h3>Screen Layout</h3>
+    <p>The application uses the same two-column layout as Problem 2/50:</p>
+    <ul>
+      <li><strong>Left panel (≈70%):</strong> An HTML5 <code>&lt;canvas&gt;</code> showing the truss with colored members, node dots, labelled nodes, load arrows, dimension lines, support symbols, reaction labels, and a legend.</li>
+      <li><strong>Right panel (≈30%):</strong> Two input fields (spacing <em>d</em> and load <em>L</em>) plus a read-only info block describing support conditions.</li>
+    </ul>
+
+    <h3>Color Coding</h3>
+    <table>
+      <thead><tr><th>Color</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Blue (#4a90d9)</td><td>Truss members (canvas diagram)</td></tr>
+        <tr><td>Red (#ff2255)</td><td>Applied downward loads</td></tr>
+        <tr><td>Green (#39ff14)</td><td>Dimension annotations</td></tr>
+        <tr><td>Cyan (#00e5ff)</td><td>Support reactions (Ax, Ay, E)</td></tr>
+        <tr><td>Cyan (result)</td><td>Compression member values</td></tr>
+        <tr><td>Green (result)</td><td>Tension member values</td></tr>
+        <tr><td>Muted grey</td><td>Zero-force members (if any)</td></tr>
+      </tbody>
+    </table>
+
+    <h2><span class="sec-num">§ 11</span> Code Architecture</h2>
+
+    <pre>
+<span class="cm">// Key functions in problem_4_22.html</span>
+
+<span class="fn">resizeCanvas</span>()        <span class="cm">// DPR-aware canvas resize</span>
+<span class="fn">drawDiagram</span>()         <span class="cm">// Full redraw: grid, members, nodes, labels,</span>
+                       <span class="cm">//   arrows, dims, supports, reactions, legend</span>
+<span class="fn">drawArrow</span>(...)        <span class="cm">// Generic arrow with label</span>
+<span class="fn">drawDimLine</span>(...)      <span class="cm">// Horizontal dimension annotation</span>
+<span class="fn">drawDimLineV</span>(...)     <span class="cm">// Vertical dimension annotation</span>
+<span class="fn">drawPin</span>(...)          <span class="cm">// Pin support symbol at A</span>
+<span class="fn">drawRoller45</span>(...)     <span class="cm">// 45°-inclined roller symbol at E</span>
+<span class="fn">drawReactionLabels</span>()  <span class="cm">// Post-compute: Ax, Ay, E values on canvas</span>
+<span class="fn">drawLegend</span>()          <span class="cm">// Color-coded legend (top-right)</span>
+
+<span class="fn">compute</span>()             <span class="cm">// Full 13-member solver (method of joints):</span>
+                       <span class="cm">//   Reactions → A → E → B → D → H → F → G</span>
+                       <span class="cm">//   Updates all ans-box, note, box class</span>
+                       <span class="cm">//   Generates 9-step working HTML</span>
+
+<span class="fn">toggleFullscreen</span>()    <span class="cm">// Canvas fullscreen mode (Esc to exit)</span>
+<span class="fn">parseField</span>(id, def)   <span class="cm">// Numeric/symbolic input parser</span>
+    </pre>
+
+    <div class="callout blue">
+      <div class="callout-title">Design Decisions</div>
+      <ul style="margin-top:6px;">
+        <li>The truss diagram uses <strong>auto-scaling</strong> — the <code>unitPx</code> variable adapts so the truss always fits within available canvas space regardless of window size.</li>
+        <li>Result boxes are dynamically re-classed (e.g., <code>ans-box compression</code>) so their CSS color updates automatically on compute.</li>
+        <li>Steps are rendered as HTML strings with <code>&lt;span&gt;</code> color tags, supporting both numeric and symbolic output.</li>
+      </ul>
+    </div>
+
+    <hr />
+    <p style="text-align:center; font-family:'Inter',sans-serif; font-size:9pt; color:#aaa; margin-top:32px;">
+      Problem 4/22 Technical Blueprint · Rathanga Parthasarathy · March 2026<br/>
+      Meriam &amp; Kraige — Engineering Mechanics: Statics · Method of Joints · All 13 Members
+    </p>
+
+    <div class="page-num">5</div>
+  </div>
+
+</div><!-- /bp-content -->
+
+</body>
+</html>

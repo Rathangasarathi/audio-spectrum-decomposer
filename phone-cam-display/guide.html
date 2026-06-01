@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhoneCam Display – Setup Guide</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #1a1a26;
+      --border: rgba(255,255,255,0.07);
+      --accent: #6c63ff;
+      --accent2: #00d4ff;
+      --text: #f0f0ff;
+      --muted: #8888aa;
+      --success: #00e5a0;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(108,99,255,0.12), transparent 60%);
+      pointer-events: none;
+    }
+    .container { max-width: 720px; margin: 0 auto; position: relative; }
+    .hero { text-align: center; padding: 60px 20px 40px; }
+    .hero-icon {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 40px rgba(108,99,255,0.4);
+    }
+    h1 { font-size: 34px; font-weight: 800; margin-bottom: 10px;
+         background: linear-gradient(90deg, var(--accent), var(--accent2));
+         -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { color: var(--muted); font-size: 16px; line-height: 1.6; }
+
+    .steps-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 20px;
+    }
+    .steps-card h2 { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--accent2); }
+    .step-item {
+      display: flex; align-items: flex-start; gap: 16px; padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .step-item:last-child { border-bottom: none; }
+    .step-num {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; flex-shrink: 0;
+    }
+    .step-content h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .step-content p { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+    .launch-btn {
+      display: block; text-align: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; text-decoration: none;
+      padding: 18px; border-radius: 14px;
+      font-size: 18px; font-weight: 700; letter-spacing: 0.3px;
+      box-shadow: 0 4px 30px rgba(108,99,255,0.4);
+      transition: all 0.2s;
+      margin-bottom: 20px;
+    }
+    .launch-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+    .note {
+      background: rgba(0,212,255,0.08);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 12px; padding: 16px; margin-bottom: 20px;
+    }
+    .note p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .note strong { color: var(--accent2); }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="hero">
+    <div class="hero-icon">📱</div>
+    <h1>PhoneCam Display</h1>
+    <p>Stream your phone's camera to your laptop screen wirelessly — in HD quality, with near-zero latency.</p>
+  </div>
+
+  <div class="note">
+    <p>⚡ <strong>Requires:</strong> Both phone and laptop must be on the <strong>same WiFi network</strong>. Uses WebRTC for peer-to-peer streaming — no server needed, no data leaves your network.</p>
+  </div>
+
+  <a href="index.html" class="launch-btn">🚀 Open Laptop Display →</a>
+
+  <div class="steps-card">
+    <h2>📋 How to Use</h2>
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Open Laptop Display</h3>
+        <p>Open <strong>index.html</strong> in your laptop browser (Chrome recommended). You'll see a 4-digit session code.</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Send phone.html to Your Phone</h3>
+        <p>Send the <strong>phone.html</strong> file to your phone via WhatsApp, email, AirDrop, Bluetooth file transfer, or USB. Open it in Chrome mobile.</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>Enter the Session Code</h3>
+        <p>On your phone, type the 4-digit code shown on the laptop screen and tap <strong>"Connect to Laptop"</strong>.</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h3>Allow Camera Permission</h3>
+        <p>When your phone browser asks, allow camera access. Your camera stream will instantly appear on the laptop screen!</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <h3>Enjoy your stream 🎉</h3>
+        <p>Switch between front/rear cameras, take snapshots, mirror the video, or go fullscreen on the laptop.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
