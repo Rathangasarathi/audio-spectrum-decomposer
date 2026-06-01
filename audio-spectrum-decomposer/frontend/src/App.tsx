@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Spectrogram from "./components/Spectrogram";
+import type { SpectrogramSelection } from "./types/SpectrogramSelection";
 
 function App() {
   const waveformCanvasRef =
@@ -13,6 +14,11 @@ function App() {
 
   const [analyser, setAnalyser] =
     useState<AnalyserNode | null>(null);
+
+  const [selection, setSelection] =
+    useState<SpectrogramSelection | null>(
+      null
+    );
 
   useEffect(() => {
     let animationId: number;
@@ -97,10 +103,6 @@ function App() {
           fftBuffer
         );
 
-        //--------------------------------
-        // WAVEFORM
-        //--------------------------------
-
         waveCtx.clearRect(
           0,
           0,
@@ -151,10 +153,6 @@ function App() {
 
         waveCtx.stroke();
 
-        //--------------------------------
-        // FFT
-        //--------------------------------
-
         fftCtx.clearRect(
           0,
           0,
@@ -189,8 +187,7 @@ function App() {
             "#00aaff";
 
           fftCtx.fillRect(
-            i *
-              barWidth,
+            i * barWidth,
             fftCanvas.height -
               barHeight,
             barWidth,
@@ -230,8 +227,7 @@ function App() {
       }}
     >
       <h1>
-        Audio Spectrum
-        Decomposer
+        Audio Spectrum Decomposer
       </h1>
 
       <h2>Waveform</h2>
@@ -288,10 +284,50 @@ function App() {
 
       {analyser && (
         <Spectrogram
-          analyser={
-            analyser
+          analyser={analyser}
+          selection={selection}
+          onSelectionChange={
+            setSelection
           }
         />
+      )}
+
+      {selection && (
+        <div
+          style={{
+            marginTop:
+              "20px",
+            padding:
+              "10px",
+            border:
+              "1px solid #444",
+          }}
+        >
+          <h3>
+            Selected Region
+          </h3>
+
+          <p>
+            Frames:
+            {" "}
+            {selection.startFrame}
+            {" → "}
+            {selection.endFrame}
+          </p>
+
+          <p>
+            Frequency:
+            {" "}
+            {selection.minFrequency.toFixed(
+              0
+            )}
+            {" Hz → "}
+            {selection.maxFrequency.toFixed(
+              0
+            )}
+            {" Hz"}
+          </p>
+        </div>
       )}
     </div>
   );
