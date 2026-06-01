@@ -1,63 +1,63 @@
-export interface MaskingOptions {
-  threshold?: number;
-  smoothing?: boolean;
-  smoothingKernel?: number;
-}
+import type {
+  STFTResult,
+} from "./stft";
 
-export function createMask(
-  magnitudes: number[][],
-  startBin: number,
-  endBin: number,
-  options: MaskingOptions = {}
-): boolean[][] {
-  const threshold = options.threshold ?? 0;
-  const shouldSmooth = options.smoothing ?? false;
-  const kernel = options.smoothingKernel ?? 3;
+export function applyFrequencyMask(
+  stft: STFTResult,
+  startFrame: number,
+  endFrame: number,
+  minBin: number,
+  maxBin: number
+): STFTResult {
+  const maskedFrames =
+    stft.frames.map(
+      (frame, frameIndex) => {
+        const real =
+          new Float32Array(
+            frame.real
+          );
 
-  const numFrames = magnitudes.length;
-  const mask = Array.from({ length: numFrames }, (_, i) =>
-    Array.from({ length: magnitudes[i]?.length ?? 0 }, (_, j) => {
-      return j >= startBin && j <= endBin;
-    })
-  );
+        const imag =
+          new Float32Array(
+            frame.imag
+          );
 
-  if (shouldSmooth) {
-    return smoothMask(mask, kernel);
-  }
+        const magnitude =
+          new Float32Array(
+            frame.magnitude
+          );
 
-  return mask;
-}
+        for (
+          let bin = 0;
+          bin <
+          magnitude.length;
+          bin++
+        ) {
+          const keep =
+            frameIndex >=
+              startFrame &&
+            frameIndex <=
+              endFrame &&
+            bin >= minBin &&
+            bin <= maxBin;
 
-export function applyMask(
-  magnitudes: number[][],
-  mask: boolean[][]
-): number[][] {
-  return magnitudes.map((frame, frameIdx) =>
-    frame.map((mag, binIdx) => {
-      const isMasked = mask[frameIdx]?.[binIdx] ?? false;
-      return isMasked ? mag : 0;
-    })
-  );
-}
-
-function smoothMask(mask: boolean[][], kernelSize: number): boolean[][] {
-  const halfKernel = Math.floor(kernelSize / 2);
-  const smoothed = mask.map((frame) =>
-    frame.map((_, binIdx) => {
-      let count = 0;
-      let sum = 0;
-
-      for (let i = -halfKernel; i <= halfKernel; i++) {
-        const neighborIdx = binIdx + i;
-        if (neighborIdx >= 0 && neighborIdx < frame.length && frame[neighborIdx]) {
-          sum++;
+          if (!keep) {
+            real[bin] = 0;
+            imag[bin] = 0;
+            magnitude[bin] = 0;
+          }
         }
-        count++;
+
+        return {
+          real,
+          imag,
+          magnitude,
+        };
       }
+    );
 
-      return sum / count > 0.5;
-    })
-  );
-
-  return smoothed;
+  return {
+    frames:
+      maskedFrames,
+  };
 }

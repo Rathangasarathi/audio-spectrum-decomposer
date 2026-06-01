@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import Spectrogram from "./components/Spectrogram";
 import type { SpectrogramSelection } from "./types/SpectrogramSelection";
 import AudioBufferStore from "./dsp/AudioBufferStore";
+import { computeSTFT } from "./dsp/stft";
+import type {
+  STFTResult,
+} from "./dsp/stft";
+import { applyFrequencyMask } from "./dsp/masking";
 
 function App() {
   const waveformCanvasRef =
@@ -18,13 +23,44 @@ function App() {
   const [fftPeak, setFftPeak] =
     useState(0);
 
+  const [sampleCount, setSampleCount] =
+    useState(0);
+
   const [analyser, setAnalyser] =
-    useState<AnalyserNode | null>(null);
+    useState<AnalyserNode | null>(
+      null
+    );
 
   const [selection, setSelection] =
     useState<SpectrogramSelection | null>(
       null
     );
+
+  const [stftResult, setStftResult] =
+    useState<STFTResult | null>(
+      null
+    );
+
+  const [maskedResult, setMaskedResult] =
+    useState<STFTResult | null>(
+      null
+    );
+
+  const [
+    maskedFrameStart,
+    setMaskedFrameStart,
+  ] = useState(0);
+
+  const [
+    maskedFrameEnd,
+    setMaskedFrameEnd,
+  ] = useState(0);
+
+  const [minBin, setMinBin] =
+    useState(0);
+
+  const [maxBin, setMaxBin] =
+    useState(0);
 
   useEffect(() => {
     let animationId: number;
@@ -91,6 +127,11 @@ function App() {
               input
             )
           );
+
+          setSampleCount(
+            audioBufferStoreRef.current?.size() ??
+              0
+          );
         };
 
       setAnalyser(
@@ -116,8 +157,9 @@ function App() {
       if (
         !waveformCanvas ||
         !fftCanvas
-      )
+      ) {
         return;
+      }
 
       const waveCtx =
         waveformCanvas.getContext(
@@ -132,8 +174,9 @@ function App() {
       if (
         !waveCtx ||
         !fftCtx
-      )
+      ) {
         return;
+      }
 
       const draw = () => {
         analyserNode.getByteTimeDomainData(
@@ -173,16 +216,17 @@ function App() {
               waveformCanvas.height) /
             2;
 
-          if (i === 0)
+          if (i === 0) {
             waveCtx.moveTo(
               x,
               y
             );
-          else
+          } else {
             waveCtx.lineTo(
               x,
               y
             );
+          }
 
           x += sliceWidth;
         }
@@ -217,8 +261,9 @@ function App() {
 
           if (
             value > peak
-          )
+          ) {
             peak = value;
+          }
 
           const barHeight =
             (value / 255) *
@@ -256,6 +301,114 @@ function App() {
       );
   }, []);
 
+  const handleComputeSTFT =
+    () => {
+      const samples =
+        audioBufferStoreRef.current?.getSamples();
+
+      if (
+        !samples ||
+        samples.length === 0
+      ) {
+        return;
+      }
+
+      const recentSamples =
+        samples.slice(
+          Math.max(
+            0,
+            samples.length - 8192
+          )
+        );
+
+      const result =
+        computeSTFT(
+          recentSamples
+        );
+
+      setStftResult(result);
+      setMaskedResult(null);
+    };
+
+  const handleApplyMask =
+    () => {
+      if (
+        !stftResult ||
+        !selection
+      ) {
+        return;
+      }
+
+      const frameCount =
+        stftResult.frames.length;
+
+      const binCount =
+        stftResult.frames[0]
+          .magnitude.length;
+
+      const frameStart =
+        Math.floor(
+          frameCount * 0.25
+        );
+
+      const frameEnd =
+        Math.floor(
+          frameCount * 0.75
+        );
+
+      const sampleRate =
+        48000;
+
+      const computedMinBin =
+        Math.max(
+          0,
+          Math.floor(
+            (selection.minFrequency /
+              (sampleRate / 2)) *
+              binCount
+          )
+        );
+
+      const computedMaxBin =
+        Math.min(
+          binCount - 1,
+          Math.ceil(
+            (selection.maxFrequency /
+              (sampleRate / 2)) *
+              binCount
+          )
+        );
+
+      const masked =
+        applyFrequencyMask(
+          stftResult,
+          frameStart,
+          frameEnd,
+          computedMinBin,
+          computedMaxBin
+        );
+
+      setMaskedResult(
+        masked
+      );
+
+      setMaskedFrameStart(
+        frameStart
+      );
+
+      setMaskedFrameEnd(
+        frameEnd
+      );
+
+      setMinBin(
+        computedMinBin
+      );
+
+      setMaxBin(
+        computedMaxBin
+      );
+    };
+
   return (
     <div
       style={{
@@ -269,7 +422,8 @@ function App() {
       }}
     >
       <h1>
-        Audio Spectrum Decomposer
+        Audio Spectrum
+        Decomposer
       </h1>
 
       <h2>Waveform</h2>
@@ -369,13 +523,106 @@ function App() {
             )}
             {" Hz"}
           </p>
+        </div>
+      )}
 
+      <hr />
+
+      <h2>
+        DSP Debug Panel
+      </h2>
+
+      <p>
+        PCM Samples:
+        {" "}
+        {sampleCount}
+      </p>
+
+      <button
+        onClick={
+          handleComputeSTFT
+        }
+      >
+        Compute STFT
+      </button>
+
+      <button
+        onClick={
+          handleApplyMask
+        }
+        style={{
+          marginLeft:
+            "10px",
+        }}
+      >
+        Apply Selection Mask
+      </button>
+
+      {stftResult && (
+        <div
+          style={{
+            marginTop:
+              "20px",
+          }}
+        >
           <p>
-            PCM Samples Stored:
+            STFT Frames:
             {" "}
             {
-              audioBufferStoreRef.current?.size() ??
-              0
+              stftResult.frames
+                .length
+            }
+          </p>
+
+          <p>
+            Frequency Bins:
+            {" "}
+            {
+              stftResult.frames[0]
+                ?.magnitude
+                .length
+            }
+          </p>
+        </div>
+      )}
+
+      {maskedResult && (
+        <div
+          style={{
+            marginTop:
+              "20px",
+            border:
+              "1px solid #00ff88",
+            padding:
+              "10px",
+          }}
+        >
+          <h3>
+            Mask Statistics
+          </h3>
+
+          <p>
+            Masked Frames:
+            {" "}
+            {maskedFrameStart}
+            {" → "}
+            {maskedFrameEnd}
+          </p>
+
+          <p>
+            Masked Bins:
+            {" "}
+            {minBin}
+            {" → "}
+            {maxBin}
+          </p>
+
+          <p>
+            Total Frames:
+            {" "}
+            {
+              maskedResult.frames
+                .length
             }
           </p>
         </div>
