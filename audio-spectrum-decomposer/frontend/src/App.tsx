@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Spectrogram from "./components/Spectrogram";
 import type { SpectrogramSelection } from "./types/SpectrogramSelection";
+import AudioBufferStore from "./dsp/AudioBufferStore";
 
 function App() {
   const waveformCanvasRef =
@@ -8,6 +9,11 @@ function App() {
 
   const fftCanvasRef =
     useRef<HTMLCanvasElement>(null);
+
+  const audioBufferStoreRef =
+    useRef<AudioBufferStore | null>(
+      null
+    );
 
   const [fftPeak, setFftPeak] =
     useState(0);
@@ -32,6 +38,12 @@ function App() {
       const audioContext =
         new AudioContext();
 
+      audioBufferStoreRef.current =
+        new AudioBufferStore(
+          audioContext.sampleRate *
+            10
+        );
+
       const source =
         audioContext.createMediaStreamSource(
           stream
@@ -51,6 +63,35 @@ function App() {
       source.connect(
         analyserNode
       );
+
+      const processor =
+        audioContext.createScriptProcessor(
+          4096,
+          1,
+          1
+        );
+
+      source.connect(
+        processor
+      );
+
+      processor.connect(
+        audioContext.destination
+      );
+
+      processor.onaudioprocess =
+        (event) => {
+          const input =
+            event.inputBuffer.getChannelData(
+              0
+            );
+
+          audioBufferStoreRef.current?.addSamples(
+            new Float32Array(
+              input
+            )
+          );
+        };
 
       setAnalyser(
         analyserNode
@@ -187,7 +228,8 @@ function App() {
             "#00aaff";
 
           fftCtx.fillRect(
-            i * barWidth,
+            i *
+              barWidth,
             fftCanvas.height -
               barHeight,
             barWidth,
@@ -326,6 +368,15 @@ function App() {
               0
             )}
             {" Hz"}
+          </p>
+
+          <p>
+            PCM Samples Stored:
+            {" "}
+            {
+              audioBufferStoreRef.current?.size() ??
+              0
+            }
           </p>
         </div>
       )}
